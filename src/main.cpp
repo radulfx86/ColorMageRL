@@ -9,8 +9,31 @@
 
 void mainloop(void *userData)
 {
-    Scene2D *scene = (Scene2D*) userData;
+    Scene2D *scene = (Scene2D *)userData;
     printf("%s(Scene: @ %p name: \"%s\")\n", __func__, scene, scene->name.c_str());
+    if (scene->currentLevel == nullptr)
+    {
+        return;
+    }
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    uint64_t now = getNow();
+    if (scene->last == 0)
+    {
+        scene->last = now;
+    }
+    float delta = (now - scene->last) / 1000.0;
+    scene->controller->update(delta);
+    scene->currentLevel->update(delta);
+    // if ( scene->tick++ %10 == 0)
+    {
+        scene->currentLevel->draw(delta);
+    }
+
+    printf("FPS: %f\n", 1.0 / delta);
+
+    scene->last = now;
+    // printf("tick\n");
 }
 
 class TitleController : public Controller
@@ -26,6 +49,52 @@ public:
     }
 };
 
+class GameController : public Controller
+{
+public:
+    GameController(Object2D &obj) : target(obj)
+    {
+    }
+    virtual void addAction(Action action) override
+    {
+        switch (action.type)
+        {
+        case Action::MOTION:
+            break;
+        case Action::ATTACK:
+            break;
+        case Action::INTERACT:
+            break;
+        case Action::SPECIAL:
+            break;
+        default:
+            break;
+        }
+    }
+private:
+    Object2D &target;
+};
+
+class TitleScreen : public Level
+{
+public:
+    TitleScreen()
+    {
+
+    }
+    virtual bool update(float delta) override
+    {
+        (void) delta;
+        // nothing to to   
+        return false;
+    }
+    virtual bool draw(float delta) override
+    {
+        return true;
+    }
+};
+
+
 int main()
 {
     printf("main\n");
@@ -33,6 +102,7 @@ int main()
     scene.name.assign("LEVEL");
     Scene2D &titleScreen = SceneManager::getInstance().getScene(SCENE_TITLE);
     titleScreen.name.assign("TITLE");
+    titleScreen.currentLevel = new TitleScreen;
     Scene2D &gameoverScreen = SceneManager::getInstance().getScene(SCENE_GAMEOVER);
     gameoverScreen.name.assign("GAMEOVER");
     printf("scenes: title @ %p (%s)\n\tgame @ %p (%s)\n\tgameover @ %p (%s)\n",

@@ -14,6 +14,10 @@ public:
     {
         (void) action;
     }
+    virtual void update(float delta)
+    {
+        (void) delta;
+    }
 };
 
 #endif // _CONTROLLER_H_
