@@ -10,6 +10,7 @@
 void mainloop(void *userData)
 {
     Scene2D *scene = (Scene2D*) userData;
+    printf("%s(Scene: @ %p name: \"%s\")\n", __func__, scene, scene->name.c_str());
 }
 
 class TitleController : public Controller
@@ -29,8 +30,16 @@ int main()
 {
     printf("main\n");
     Scene2D &scene = SceneManager::getInstance().getScene(SCENE_LEVEL);
+    scene.name.assign("LEVEL");
     Scene2D &titleScreen = SceneManager::getInstance().getScene(SCENE_TITLE);
+    titleScreen.name.assign("TITLE");
     Scene2D &gameoverScreen = SceneManager::getInstance().getScene(SCENE_GAMEOVER);
+    gameoverScreen.name.assign("GAMEOVER");
+    printf("scenes: title @ %p (%s)\n\tgame @ %p (%s)\n\tgameover @ %p (%s)\n",
+        &titleScreen, titleScreen.name.c_str(),
+        &scene, scene.name.c_str(),
+        &gameoverScreen, gameoverScreen.name.c_str()
+    );
     initScene(titleScreen);
     titleScreen.controller = new TitleController;
 

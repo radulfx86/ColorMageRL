@@ -1,6 +1,7 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
 #include "gl_headers.h"
+#include <string>
 
 class Level;
 class Controller;
@@ -14,6 +15,7 @@ enum SceneTypes {
 
 typedef struct Scene2D
 {
+    std::string name;
     bool running;
     bool paused;
     #ifndef __EMSCRIPTEN__
