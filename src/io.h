@@ -7,6 +7,6 @@
 
 std::string loadText(const std::string &path);
 
-GLuint loadTexture(const char *path, GLuint offset);
+GLuint loadTexture(const char *path);
 
 #endif // _IO_H_

@@ -375,7 +375,7 @@ Dialog2D::Dialog2D()
     this->text = ObjectFactory::getText(Vec2{0,0},"test",green);
     this->bg = ObjectFactory::createSimpleBgObject(1.0, Vec2{1,1}, Vec2i{0,0});
     this->bg->texOffset = 0;
-    this->bg->tex = loadTexture("assets/images/bad_scribble_1.png", 0);
+    this->bg->tex = loadTexture("assets/images/bad_scribble_1.png");
     this->controller = new DialogController(this->tree, this->source, this->target); 
 }
 

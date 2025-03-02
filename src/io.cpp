@@ -9,7 +9,7 @@ std::string loadText(const std::string &path)
     return sstr.str();
 }
 
-GLuint loadTexture(const char *path, GLuint offset)
+GLuint loadTexture(const char *path)
 {
     GLuint tex;
     glGenTextures(1, &tex);

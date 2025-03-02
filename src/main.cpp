@@ -7,8 +7,9 @@
 #include "scene_manager.h"
 #include "object.h"
 #include "object_factory.h"
+#include "title_scene.h"
+#include "dummy_scene.h"
 
-#include <sstream>
 
 
 void mainloop(void *userData)
@@ -30,29 +31,12 @@ void mainloop(void *userData)
     float delta = (now - scene->last) / 1000.0;
     scene->controller->update(delta);
     scene->currentLevel->update(delta);
-    // if ( scene->tick++ %10 == 0)
-    {
-        scene->currentLevel->draw(delta);
-    }
+    scene->currentLevel->draw(delta);
 
     printf("FPS: %f\n", 1.0 / delta);
 
     scene->last = now;
-    // printf("tick\n");
 }
-
-class TitleController : public Controller
-{
-public:
-    virtual void addAction(Action action) override
-    {
-        printf("TITLE CONTROLLER %s\n", __func__);
-        (void)action;
-        Scene2D &title = SceneManager::getInstance().getScene(SCENE_TITLE);
-        Scene2D &level = SceneManager::getInstance().getScene(SCENE_LEVEL);
-        switchScene(title, level);
-    }
-};
 
 class GameController : public Controller
 {
@@ -81,47 +65,6 @@ private:
     Object2D &target;
 };
 
-class TitleScreen : public Level
-{
-public:
-    TitleScreen() : deltaSum(0)
-    {
-        info = new Text2D;
-        info2 = new Text2D;
-        float yellow[] = {1.0, 1.0, 0.0};
-        float red[] = {1.0, 0.0, 0.0};
-        info = ObjectFactory::getText(Vec2{-2, 0}, "hello world", yellow);
-        info2 = ObjectFactory::getText(Vec2{-4, -3}, "test", red);
-        info->setText("COLOR MAGE");
-    }
-    virtual bool update(float delta) override
-    {
-        (void) delta;
-        deltaSum += delta;
-        if ( deltaSum > 10.0 )
-        {
-            deltaSum -= 1.0;
-            info->setText("asdf MEH asdf");
-        }
-        std::stringstream sstr;
-        sstr << "delta: " << delta;
-        info2->setText(sstr.str());
-        // nothing to to   
-        return false;
-    }
-    virtual bool draw(float delta) override
-    {
-        (void) delta;
-        info->draw();
-        info2->draw();
-        return true;
-    }
-private:
-    Text2D *info;
-    float deltaSum;
-    Text2D *info2;
-};
-
 
 int main()
 {
@@ -138,6 +81,7 @@ int main()
     printf("level\n");
     Scene2D &scene = SceneManager::getInstance().getScene(SCENE_LEVEL);
     scene.name.assign("LEVEL");
+    scene.currentLevel = new DummyLevel;
     printf("gameover\n");
     Scene2D &gameoverScreen = SceneManager::getInstance().getScene(SCENE_GAMEOVER);
     gameoverScreen.name.assign("GAMEOVER");

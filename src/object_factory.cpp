@@ -119,7 +119,7 @@ EntityID ObjectFactory::initBackground()
     GLuint instancedProgram = createShader(loadText("shaders/simple.instanced.vs").c_str(), loadText("shaders/simple.instanced.fs").c_str());
     //createInstancedObject(*iobj, instancedProgram);
     ObjectFactory::createInstanceBackground(*iobj, instancedProgram);
-    iobj->tex = loadTexture("assets/images/tiles.png",0);
+    iobj->tex = loadTexture("assets/images/tiles.png");
     EntityID background = s.newEntity("background");
     s.addComponent<Object2D*>(background,iobj);
     Bounds *bgbounds = new Bounds;
@@ -374,7 +374,7 @@ Text2D *ObjectFactory::getText(Vec2 pos, std::string content, float color[3])
     obj->setTextIndex('?', c++);
     obj->textureColumns = 36;
 
-    obj->tex = loadTexture("assets/images/font8_12.png",0);
+    obj->tex = loadTexture("assets/images/font8_12.png");
 
     obj->setText(content);
     obj->setColor(color);
