@@ -83,6 +83,26 @@ EM_BOOL keyup_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, v
     return 0;
 }
 
+void initGL()
+[
+    EmscriptenWebGLContextAttributes attrs;
+    emscripten_webgl_init_context_attributes(&attrs);
+
+    attrs.enableExtensionsByDefault = 1;
+    attrs.majorVersion = 2;
+    attrs.minorVersion = 0;
+
+    emscripten_set_canvas_element_size("#canvas", 640, 480);
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
+    if (!context)
+    {
+        printf("failed to create context\n");
+        exit(1);
+    }
+
+    emscripten_webgl_make_context_current(context);
+]
+
 void initScene(Scene2D &scene)
 {
     EmscriptenWebGLContextAttributes attrs;
@@ -142,22 +162,22 @@ void handleInput(Scene2D &scene)
                 switchScene(scene, SceneManager::getInstance().getScene(SCENE_TITLE));
                 break;
             case SDLK_RIGHT:
-                scene.controller->addAction(Action{Action::MOTION, Vec2i{1,0}, {0}, event.type == SDL_KEYDOWN});
+                scene.controller->addAction(Action{Action::MOTION, Vec2i{1,0}, {0,0}, event.type == SDL_KEYDOWN});
                 break;
             case SDLK_LEFT:
-                scene.controller->addAction(Action{Action::MOTION, Vec2i{-1,0}, {0}, event.type == SDL_KEYDOWN});
+                scene.controller->addAction(Action{Action::MOTION, Vec2i{-1,0}, {0,0}, event.type == SDL_KEYDOWN});
                 break;
             case SDLK_UP:
-                scene.controller->addAction(Action{Action::MOTION, Vec2i{0,1}, {0}, event.type == SDL_KEYDOWN});
+                scene.controller->addAction(Action{Action::MOTION, Vec2i{0,1}, {0,0}, event.type == SDL_KEYDOWN});
                 break;
             case SDLK_DOWN:
-                scene.controller->addAction(Action{Action::MOTION, Vec2i{0,-1}, {0}, event.type == SDL_KEYDOWN});
+                scene.controller->addAction(Action{Action::MOTION, Vec2i{0,-1}, {0,0}, event.type == SDL_KEYDOWN});
                 break;
             case SDLK_SPACE:
-                scene.controller->addAction(Action{Action::INTERACT, {0}, {0}, event.type == SDL_KEYDOWN});
+                scene.controller->addAction(Action{Action::INTERACT, {0,0}, {0,0}, event.type == SDL_KEYDOWN});
                 break;
             case SDLK_q:
-                scene.controller->addAction(Action{Action::SPECIAL, {0}, {0}, event.type == SDL_KEYDOWN});
+                scene.controller->addAction(Action{Action::SPECIAL, {0,0}, {0,0}, event.type == SDL_KEYDOWN});
                 break;
             default:
                 break;
@@ -167,10 +187,12 @@ void handleInput(Scene2D &scene)
         {
             Vec2i mousePos;
             SDL_GetMouseState( &mousePos.x, &mousePos.y);
-            scene.controller->addAction(Action{Action::SPECIAL, mousePos, {0}, true});
+            scene.controller->addAction(Action{Action::SPECIAL, mousePos, {0,0}, true});
         }
     }
 }
+
+SDL_Window *window;
 
 void startMainLoop(Scene2D &scene)
 {
@@ -180,13 +202,12 @@ void startMainLoop(Scene2D &scene)
         handleInput(scene);
         mainloop(&scene);
         //if ( scene.tick % 10 == 1)
-        SDL_GL_SwapWindow(scene.window);
+        SDL_GL_SwapWindow(window);
     }
 }
-void initScene(Scene2D &scene)
-{
 
-    scene.running = false;
+void initGL()
+{
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
@@ -197,15 +218,20 @@ void initScene(Scene2D &scene)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    scene.window = SDL_CreateWindow("meh", 0, 0, 512, 512, SDL_WINDOW_OPENGL);
-    SDL_GLContext context = SDL_GL_CreateContext(scene.window);
-    (void) context;
+    window = SDL_CreateWindow("meh", 0, 0, 512, 512, SDL_WINDOW_OPENGL);
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+}
+
+void initScene(Scene2D &scene)
+{
+    scene.running = false;
 }
 
 #endif
 
 void cleanScene(Scene2D &scene)
 {
+    (void) scene;
 }
 
 void switchScene(Scene2D &oldScene, Scene2D &newScene, bool stop)

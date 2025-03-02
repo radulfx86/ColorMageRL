@@ -5,6 +5,10 @@
 #include "types.h"
 #include "display.h"
 #include "scene_manager.h"
+#include "object.h"
+#include "object_factory.h"
+
+#include <sstream>
 
 
 void mainloop(void *userData)
@@ -16,6 +20,7 @@ void mainloop(void *userData)
         return;
     }
     glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.2,0.1,0.0,1.0);
 
     uint64_t now = getNow();
     if (scene->last == 0)
@@ -60,6 +65,7 @@ public:
         switch (action.type)
         {
         case Action::MOTION:
+            target.pos = target.pos + action.value_f;
             break;
         case Action::ATTACK:
             break;
@@ -78,40 +84,70 @@ private:
 class TitleScreen : public Level
 {
 public:
-    TitleScreen()
+    TitleScreen() : deltaSum(0)
     {
-
+        info = new Text2D;
+        info2 = new Text2D;
+        float yellow[] = {1.0, 1.0, 0.0};
+        float red[] = {1.0, 0.0, 0.0};
+        info = ObjectFactory::getText(Vec2{-2, 0}, "hello world", yellow);
+        info2 = ObjectFactory::getText(Vec2{-4, -3}, "test", red);
+        info->setText("COLOR MAGE");
     }
     virtual bool update(float delta) override
     {
         (void) delta;
+        deltaSum += delta;
+        if ( deltaSum > 10.0 )
+        {
+            deltaSum -= 1.0;
+            info->setText("asdf MEH asdf");
+        }
+        std::stringstream sstr;
+        sstr << "delta: " << delta;
+        info2->setText(sstr.str());
         // nothing to to   
         return false;
     }
     virtual bool draw(float delta) override
     {
+        (void) delta;
+        info->draw();
+        info2->draw();
         return true;
     }
+private:
+    Text2D *info;
+    float deltaSum;
+    Text2D *info2;
 };
 
 
 int main()
 {
     printf("main\n");
-    Scene2D &scene = SceneManager::getInstance().getScene(SCENE_LEVEL);
-    scene.name.assign("LEVEL");
+    printf("initialize openGL\n");
+    initGL();
+    printf("creating scenes\n");
+    printf("title\n");
     Scene2D &titleScreen = SceneManager::getInstance().getScene(SCENE_TITLE);
     titleScreen.name.assign("TITLE");
     titleScreen.currentLevel = new TitleScreen;
+    initScene(titleScreen);
+    titleScreen.controller = new TitleController;
+    printf("level\n");
+    Scene2D &scene = SceneManager::getInstance().getScene(SCENE_LEVEL);
+    scene.name.assign("LEVEL");
+    printf("gameover\n");
     Scene2D &gameoverScreen = SceneManager::getInstance().getScene(SCENE_GAMEOVER);
     gameoverScreen.name.assign("GAMEOVER");
+    printf("scenes overall:\n");
     printf("scenes: title @ %p (%s)\n\tgame @ %p (%s)\n\tgameover @ %p (%s)\n",
         &titleScreen, titleScreen.name.c_str(),
         &scene, scene.name.c_str(),
         &gameoverScreen, gameoverScreen.name.c_str()
     );
-    initScene(titleScreen);
-    titleScreen.controller = new TitleController;
+    printf("start main loop\n");
 
     startMainLoop(titleScreen);
 

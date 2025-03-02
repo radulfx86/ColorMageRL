@@ -28,9 +28,7 @@ typedef struct Scene2D
     std::string name;
     bool running;
     bool paused;
-    #ifndef __EMSCRIPTEN__
-    SDL_Window *window;
-    #endif
+
     uint64_t last;
     Level *currentLevel;
     Controller *controller;
@@ -58,10 +56,23 @@ typedef struct Vec2i
     }
 } Vec2i;
 
+template<>
+struct std::hash<Vec2i>
+{
+    std::size_t operator()(const Vec2i &v) const noexcept
+    {
+        return v.x * MAX_WIDTH + v.y;
+    }
+};
+
 typedef struct Vec2
 {
     float x;
     float y;
+    friend Vec2 operator+(const Vec2 &a, const Vec2 &b)
+    {
+        return Vec2{a.x+b.x, a.y+b.y};
+    }
  } Vec2;
 
 typedef struct Action
@@ -119,24 +130,6 @@ public:
     virtual void draw() = 0;
     virtual void setPosition(Vec2 pos) = 0;
     virtual void updateCamera(Mat4 view, Mat4 proj) = 0;
-};
-
-class Object2D : public Drawable
-{
-public:
-    GLuint attribPos;
-    GLuint vao;
-    GLuint vertexBuffer;
-    GLuint tex;
-    GLuint program;
-    GLuint texOffset;
-    Animation animation;
-    Vec2 pos;
-    virtual void updateAnimation(float delta_s);
-    virtual void draw() override;
-    virtual void setPosition(Vec2 pos) override;
-    virtual void updateCamera(float view[16], float proj[16]) override;
-    void setAnimation(Direction_t animDir);
 };
 
 
