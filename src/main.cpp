@@ -9,8 +9,6 @@
 #include "object_factory.h"
 #include "controller.h"
 
-
-
 void mainloop(void *userData)
 {
     Scene2D *scene = (Scene2D *)userData;
@@ -36,34 +34,6 @@ void mainloop(void *userData)
 
     scene->last = now;
 }
-
-class GameController : public Controller
-{
-public:
-    GameController(Object2D &obj) : target(obj)
-    {
-    }
-    virtual void addAction(Action action) override
-    {
-        switch (action.type)
-        {
-        case Action::MOTION:
-            target.pos = target.pos + action.value_f;
-            break;
-        case Action::ATTACK:
-            break;
-        case Action::INTERACT:
-            break;
-        case Action::SPECIAL:
-            break;
-        default:
-            break;
-        }
-    }
-private:
-    Object2D &target;
-};
-
 
 int main()
 {

@@ -11,6 +11,7 @@ DummyLevel::DummyLevel() : deltaSum(0)
     float red[] = {1.0, 0.0, 0.0};
     info = ObjectFactory::getText(Vec2{-2, 0}, "Dummy Level", yellow);
     info2 = ObjectFactory::getText(Vec2{-4, -3}, "test", red);
+    info->setPosition(Vec2{0,0});
 }
 
 bool DummyLevel::update(float delta)

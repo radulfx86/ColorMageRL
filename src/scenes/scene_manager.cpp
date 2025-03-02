@@ -30,6 +30,7 @@ void SceneManager::initializeScenes()
     Scene2D &scene = getScene(SCENE_LEVEL);
     scene.name.assign("LEVEL");
     scene.currentLevel = new DummyLevel;
+    scene.controller = new GameController(((DummyLevel*)scene.currentLevel)->getTarget());
 
     printf("gameover\n");
     Scene2D &gameoverScreen = getScene(SCENE_GAMEOVER);
