@@ -7,8 +7,7 @@
 #include "scene_manager.h"
 #include "object.h"
 #include "object_factory.h"
-#include "title_scene.h"
-#include "dummy_scene.h"
+#include "controller.h"
 
 
 
@@ -71,29 +70,10 @@ int main()
     printf("main\n");
     printf("initialize openGL\n");
     initGL();
-    printf("creating scenes\n");
-    printf("title\n");
-    Scene2D &titleScreen = SceneManager::getInstance().getScene(SCENE_TITLE);
-    titleScreen.name.assign("TITLE");
-    titleScreen.currentLevel = new TitleScreen;
-    initScene(titleScreen);
-    titleScreen.controller = new TitleController;
-    printf("level\n");
-    Scene2D &scene = SceneManager::getInstance().getScene(SCENE_LEVEL);
-    scene.name.assign("LEVEL");
-    scene.currentLevel = new DummyLevel;
-    printf("gameover\n");
-    Scene2D &gameoverScreen = SceneManager::getInstance().getScene(SCENE_GAMEOVER);
-    gameoverScreen.name.assign("GAMEOVER");
-    printf("scenes overall:\n");
-    printf("scenes: title @ %p (%s)\n\tgame @ %p (%s)\n\tgameover @ %p (%s)\n",
-        &titleScreen, titleScreen.name.c_str(),
-        &scene, scene.name.c_str(),
-        &gameoverScreen, gameoverScreen.name.c_str()
-    );
-    printf("start main loop\n");
 
-    startMainLoop(titleScreen);
+    SceneManager::getInstance().initializeScenes();
+
+    SceneManager::getInstance().start();
 
     return 0;
 }
