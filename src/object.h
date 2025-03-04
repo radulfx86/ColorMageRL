@@ -21,8 +21,11 @@ public:
     virtual void setPosition(Vec2 pos) override;
     virtual void updateCamera(float view[16], float proj[16]) override;
     void setAnimation(Direction_t animDir);
+    friend bool operator<(const Object2D &a, const Object2D &b)
+    {
+        return a < b;
+    }
 };
-
 
 class InstancedObject2D : public Object2D
 {

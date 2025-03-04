@@ -23,9 +23,17 @@ public:
 
     void start(SceneTypes scene = SCENE_TITLE);
 
+    void incrementRound();
+
+    int getCurrentRound() const
+    {
+        return round;
+    }
+
 private:
-    SceneManager() {}
+    SceneManager() : round(0) {}
     std::array<Scene2D, NUM_SCENES> scenes;
+    int round;
 };
 
 

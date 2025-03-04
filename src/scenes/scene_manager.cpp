@@ -62,3 +62,12 @@ void SceneManager::start(SceneTypes scene)
 {
     startMainLoop(scenes[scene]);
 }
+
+void SceneManager::incrementRound()
+{
+    ++round;
+    for ( Scene2D &scene : scenes )
+    {
+        ++scene.round;
+    }
+}

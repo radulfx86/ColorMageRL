@@ -17,6 +17,9 @@ link_libraries(GL)
 link_libraries(SDL2)
 link_libraries(SDL2_mixer)
 link_libraries(SDL2_image)
-include_directories(src src/scenes)
+include_directories(src
+    src/scenes
+    src/ecs
+)
 
 add_subdirectory(src)

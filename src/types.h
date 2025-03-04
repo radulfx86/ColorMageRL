@@ -4,6 +4,7 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <queue>
 
 class Level
 {
@@ -33,6 +34,7 @@ typedef struct Scene2D
     Level *currentLevel;
     Controller *controller;
     uint64_t tick;
+    uint64_t round;
     float bg_color[4];
 } Scene2D;
 
@@ -89,6 +91,13 @@ typedef struct Action
     Vec2 value_f;
     bool value_b;
 } Action;
+
+typedef struct ActionQueue
+{
+    bool skip;
+    int maxActions;
+    std::queue<Action> elements;
+} ActionQueue;
 
 /** graphics */
 

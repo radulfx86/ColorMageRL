@@ -7,51 +7,53 @@
 #include "io.h"
 #include "shaders.h"
 
+
+typedef struct LevelData
+{
+    int id;
+    int width;
+    int height;
+    bool *data;
+} LevelData;
+
 class DummyLevel : public Level
 {
 public:
     DummyLevel();
     virtual bool update(float delta) override;
     virtual bool draw(float delta) override;
-    Object2D *getTarget() { return info; }
+    EntityID getTarget() { return player; }
+    void handleAction(EntityID eid, Action action);
 private:
+    EntityID player;
     Text2D *info;
     float deltaSum;
     Text2D *info2;
     int frames;
     StateMachineManager statesManager;
     SystemID drawingSystem;
+    SystemID actionsSystem;
+    int activeLevelData;
 };
 
 class GameController : public Controller
 {
 public:
-    GameController(Object2D *obj) : target(obj)
+    GameController(EntityID target) : target(target)
     {
     }
     virtual void addAction(Action action) override
     {
-        switch (action.type)
+        /// key up
+        if ( not action.value_b )
         {
-        case Action::MOTION:
-        {
-            Vec2 delta{(float)action.value_i.x, (float)action.value_i.y};
-            target->setPosition(target->pos + delta);
-            break;
-        }
-        case Action::ATTACK:
-            break;
-        case Action::INTERACT:
-            break;
-        case Action::SPECIAL:
-            break;
-        default:
-            break;
+            ActionQueue *queue = EntityManager::getInstance().getComponent<ActionQueue*>(target);
+            queue->elements.push(action);
         }
     }
 
 private:
-    Object2D *target;
+    EntityID target;
 };
 
 #endif // _DUMMY_SCENE_H_
