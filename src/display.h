@@ -16,5 +16,4 @@ void initScene(Scene2D &scene);
 
 void cleanScene(Scene2D &scene);
 
-
 #endif // _DISPLAY_H_

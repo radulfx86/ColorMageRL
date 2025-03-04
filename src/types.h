@@ -33,6 +33,7 @@ typedef struct Scene2D
     Level *currentLevel;
     Controller *controller;
     uint64_t tick;
+    float bg_color[4];
 } Scene2D;
 
 typedef float Mat4[16];

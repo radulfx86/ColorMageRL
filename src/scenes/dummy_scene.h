@@ -3,6 +3,9 @@
 #include "types.h"
 #include "object.h"
 #include "controller.h"
+#include "state_machine.h"
+#include "io.h"
+#include "shaders.h"
 
 class DummyLevel : public Level
 {
@@ -16,6 +19,8 @@ private:
     float deltaSum;
     Text2D *info2;
     int frames;
+    StateMachineManager statesManager;
+    SystemID drawingSystem;
 };
 
 class GameController : public Controller

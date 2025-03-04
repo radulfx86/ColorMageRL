@@ -5,6 +5,8 @@ file(GLOB SOURCES
     ./*.cpp
     ./scenes/*.h
     ./scenes/*.cpp
+    ./ecs/*.h
+    ./ecs/*.cpp
 	)
 
 add_executable(ColorMage ${SOURCES} main.cpp)

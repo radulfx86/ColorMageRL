@@ -3,11 +3,15 @@
 
 #include "gl_headers.h"
 #include "types.h"
+// for initGL
 #include "display.h"
+// for scene setup
 #include "scene_manager.h"
-#include "object.h"
-#include "object_factory.h"
+// for controller
 #include "controller.h"
+
+#include "ecs.h"
+#include "state_machine.h"
 
 void mainloop(void *userData)
 {
@@ -18,7 +22,7 @@ void mainloop(void *userData)
         return;
     }
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.2,0.1,0.0,1.0);
+    glClearColor(scene->bg_color[0], scene->bg_color[1], scene->bg_color[2], scene->bg_color[3]);
 
     uint64_t now = getNow();
     if (scene->last == 0)
@@ -35,11 +39,57 @@ void mainloop(void *userData)
     scene->last = now;
 }
 
+#include "log.h"
+
+void testArea()
+{
+    EntityManager &em = EntityManager::getInstance();
+    (void)em;
+    // log(std::cout, 2, "eins", "zwei") << 3 << 4 << "five\n";
+    LOG("hello world", 1, 2, 3);
+    EntityID player = em.newEntity("player");
+
+    LOG("player entity id: ", player);
+
+    em.showAll();
+
+    /*
+
+    StateMachine stm({"idle", "moving"});
+    State idleState(-1);
+    State movingState(-1);
+    stm.setState(&idleState, "idle", {"moving"});
+    stm.setState(&movingState, "moving", {"idle"});
+
+    stm.log();
+
+    */
+
+    StateMachineManager smm;
+    State initialState;
+    int idleId = smm.registerState(
+            StateInfo{0, stateDefaultTrue,
+      stateDefaultTrue,
+             stateDefaultTrue,
+             stateDefaultTrue});
+    int movingId = smm.registerState(
+            StateInfo{0, stateDefaultTrue,
+             stateDefaultTrue,
+             0,
+             0
+            });
+    initialState.stateID = smm.connectStates({idleId, movingId});
+    (void) initialState;
+}
+
 int main()
 {
+    testArea();
     printf("main\n");
     printf("initialize openGL\n");
     initGL();
+
+
 
     SceneManager::getInstance().initializeScenes();
 

@@ -4,6 +4,9 @@
 #include "scene_manager.h"
 
 #ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#include <emscripten/html5_webgl.h>
 
 EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent *e, void *userData)
 {
@@ -76,7 +79,7 @@ EM_BOOL keyup_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, v
 }
 
 void initGL()
-[
+{
     EmscriptenWebGLContextAttributes attrs;
     emscripten_webgl_init_context_attributes(&attrs);
 
@@ -93,7 +96,7 @@ void initGL()
     }
 
     emscripten_webgl_make_context_current(context);
-]
+}
 
 void initScene(Scene2D &scene)
 {
@@ -126,6 +129,7 @@ void initScene(Scene2D &scene)
 
 void startMainLoop(Scene2D &scene)
 {
+    emscripten_cancel_main_loop();
     emscripten_set_main_loop_arg(mainloop, &scene, 0, 0);
 }
 
