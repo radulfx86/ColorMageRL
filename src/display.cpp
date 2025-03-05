@@ -96,6 +96,8 @@ void initGL()
     }
 
     emscripten_webgl_make_context_current(context);
+
+    glViewport(0,0,640,480);
 }
 
 void initScene(Scene2D &scene)
@@ -216,6 +218,8 @@ void initGL()
 
     window = SDL_CreateWindow("meh", 0, 0, 512, 512, SDL_WINDOW_OPENGL);
     SDL_GL_CreateContext(window);
+
+    glViewport(0,0,640,480);
 }
 
 void initScene(Scene2D &scene)

@@ -31,6 +31,27 @@ void ObjectFactory::createInstancedObject(InstancedObject2D &obj, GLuint program
     }
     obj.numInstances = i;
 }
+
+EntityID ObjectFactory::initBackground()
+{
+    InstancedObject2D *iobj = new InstancedObject2D;
+    GLuint instancedProgram = createShader(loadText("shaders/simple.instanced.vs").c_str(), loadText("shaders/simple.instanced.fs").c_str());
+    //createInstancedObject(*iobj, instancedProgram);
+    ObjectFactory::createInstanceBackground(*iobj, instancedProgram);
+    iobj->tex = loadTexture("assets/images/tiles.png");
+    EntityID background = EntityManager::getInstance().newEntity("background");
+    EntityManager::getInstance().addComponent<Object2D*>(background,iobj);
+    Bounds *bgbounds = new Bounds;
+    bgbounds->pos = Vec2{0,0};
+    EntityManager::getInstance().addComponent<Bounds*>(background, bgbounds);
+    //MotionParameters_t *bgMotion = new MotionParameters_t;
+    //bgMotion->speed = {0,0};
+    //EntityManager::getInstance().addComponent<MotionParameters_t*>(background, bgMotion);
+    printf("level tex: %d\n", iobj->tex);
+
+    return background;
+}
+
 #if 0
 
 EntityID ObjectFactory::addNPC(GLuint tex, GLuint program)
@@ -112,27 +133,6 @@ EntityID ObjectFactory::addNPC(GLuint tex, GLuint program)
 
     return npc;
 }
-
-EntityID ObjectFactory::initBackground()
-{
-    InstancedObject2D *iobj = new InstancedObject2D;
-    GLuint instancedProgram = createShader(loadText("shaders/simple.instanced.vs").c_str(), loadText("shaders/simple.instanced.fs").c_str());
-    //createInstancedObject(*iobj, instancedProgram);
-    ObjectFactory::createInstanceBackground(*iobj, instancedProgram);
-    iobj->tex = loadTexture("assets/images/tiles.png");
-    EntityID background = s.newEntity("background");
-    s.addComponent<Object2D*>(background,iobj);
-    Bounds *bgbounds = new Bounds;
-    bgbounds->pos = Vec2{0,0};
-    s.addComponent<Bounds*>(background, bgbounds);
-    MotionParameters_t *bgMotion = new MotionParameters_t;
-    bgMotion->speed = {0,0};
-    s.addComponent<MotionParameters_t*>(background, bgMotion);
-    printf("level tex: %d\n", iobj->tex);
-
-    return background;
-}
-
 
 EntityID ObjectFactory::addText(Vec2 pos, std::string content)
 {

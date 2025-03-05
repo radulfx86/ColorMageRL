@@ -6,15 +6,41 @@
 #include "state_machine.h"
 #include "io.h"
 #include "shaders.h"
+#include "level.h"
 
-
-typedef struct LevelData
+class Camera : public System
 {
-    int id;
-    int width;
-    int height;
-    bool *data;
-} LevelData;
+public:
+    constexpr static Mat4 identity{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    Mat4 view;
+    Mat4 proj;
+    Vec2 pos;
+    Camera();
+
+    void move(Vec2 pos);
+
+    void zoom(float level);
+
+    Bounds getViewCone();
+
+    virtual void update(float delta) override;
+
+    void setTarget(EntityID target)
+    {
+        this->target = target;
+        center = true;
+    }
+
+    void unsetTarget()
+    {
+        center = false;
+    }
+    
+private:
+    EntityID target;
+    bool center;
+};
+
 
 class DummyLevel : public Level
 {
@@ -26,6 +52,7 @@ public:
     void handleAction(EntityID eid, Action action);
 private:
     EntityID player;
+    EntityID background;
     Text2D *info;
     float deltaSum;
     Text2D *info2;
@@ -33,7 +60,10 @@ private:
     StateMachineManager statesManager;
     SystemID drawingSystem;
     SystemID actionsSystem;
+    Camera camera;
     int activeLevelData;
+    LevelData data;
+    int numTiles;
 };
 
 class GameController : public Controller

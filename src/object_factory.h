@@ -3,16 +3,17 @@
 
 #include "types.h"
 #include "object.h"
+#include "ecs.h"
 
 namespace ObjectFactory
 {
 
 void createInstancedObject(InstancedObject2D &obj, GLuint program);
 
+EntityID initBackground();
 /*
 EntityID addNPC(GLuint tex, GLuint program);
 
-EntityID initBackground();
 
 EntityID addText(Vec2 pos, std::string content);
 
