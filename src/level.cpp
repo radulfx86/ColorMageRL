@@ -16,25 +16,26 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
     }
     Vec2i offset{-levelSize.x/2, -levelSize.y/2};
     (void)numSubLevels;
-    const unsigned int seed = 142;
+    const unsigned int seed = 1423123;
     std::srand(seed);
     LevelData level;
     std::vector<Room> rooms;
     std::bitset<MAX_WIDTH * MAX_WIDTH> levelDataOuter(false);
     std::bitset<MAX_WIDTH * MAX_WIDTH> levelDataInner(false);
 
-    int maxNumRooms = 10;
-    int maxTries = 3;
+    int maxNumRooms = 30;
+    int maxTries = 5;
     bool foundSpace = true;
-    const int randScaleX = RAND_MAX / levelSize.x;
-    const int randScaleY = RAND_MAX / levelSize.y;
-    const Vec2i maxRoomSize{10, 10};
-    const Vec2i minRoomSize{2, 2};
+    const Vec2i maxRoomSize{20, 20};
+    const Vec2i minRoomSize{4, 4};
+    const int randScaleX = RAND_MAX / (levelSize.x + minRoomSize.x);
+    const int randScaleY = RAND_MAX / (levelSize.y + minRoomSize.y);
     const int randRoomScaleX = RAND_MAX / (maxRoomSize.x - minRoomSize.y);
     const int randRoomScaleY = RAND_MAX / (maxRoomSize.y - minRoomSize.y);
     for (int numRooms = 0; foundSpace && numRooms < maxNumRooms; ++numRooms)
     {
         std::bitset<MAX_WIDTH * MAX_WIDTH> tmpLevel(false);
+        std::bitset<MAX_WIDTH * MAX_WIDTH> tmpLevelInner(false);
         // extracted separately to keep order for deterministic handling using seeded random
         int startRandX;
         int startRandY;
@@ -60,6 +61,8 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
         {
             int roomWidth = minRoomSize.x + std::rand() / randRoomScaleX;
             int roomHeight = minRoomSize.y + std::rand() / randRoomScaleY;
+	    roomWidth = maxRoomSize.x;
+	    roomHeight = maxRoomSize.y;
             if ( levelSize.x <= roomWidth + startRandX )
             {
                 printf("reduce width from %d to %d\n", roomWidth, levelSize.x - startRandX - 1);
@@ -85,7 +88,7 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
                 {
                 //    printf("data at %d %d: %d %d\n", startRandX + w, startRandY + h, levelDataInner.test((startRandY + h) * levelSize.x + (startRandX + w)), levelDataOuter.test((startRandY + h) * levelSize.x + (startRandX + w)));
                 }
-                if (w == 0)
+                if (w < minRoomSize.x)
                 {
                     printf("max height for room[%d]: %d < %d\n", numRooms, h, roomHeight);
                     roomHeight = h;
@@ -99,7 +102,7 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
                 for (int w = 0; w < roomWidth; ++w)
                 {
                     // set room as used
-                    levelDataInner.set((startRandY + h) * levelSize.x + (startRandX + w));
+                    tmpLevelInner.set((startRandY + h) * levelSize.x + (startRandX + w));
                     // set outer perimeter of room as well
                     for (int i = -1; i < 2; ++i)
                     {
@@ -110,46 +113,71 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
                     }
                 }
             }
-            if (h > 0)
+            if (h > minRoomSize.y)
             {
                 // found room of size roomWidth, roomHeight
                 rooms.push_back(Room{Vec2i{startRandX, startRandY}, Vec2i{roomWidth, roomHeight}});
+            	levelDataOuter |= tmpLevel;
+            	levelDataInner |= tmpLevelInner;
             }
-            levelDataOuter |= tmpLevel;
         }
     }
     // connect rooms
     for (unsigned int idxRoom = 0; idxRoom < rooms.size() - 1; ++idxRoom)
     {
-        int idxRoomNext = idxRoom + 1;
-        unsigned int roomScaleAX = RAND_MAX / rooms[idxRoom].size.x;
-        unsigned int roomScaleAY = RAND_MAX / rooms[idxRoom].size.y;
-        unsigned int pointRoomAX = rooms[idxRoom].start.x + std::rand() / roomScaleAX;
-        unsigned int pointRoomAY = rooms[idxRoom].start.y + std::rand() / roomScaleAY;
-        unsigned int roomScaleBX = RAND_MAX / rooms[idxRoomNext].size.x;
-        unsigned int roomScaleBY = RAND_MAX / rooms[idxRoomNext].size.y;
-        unsigned int pointRoomBX = rooms[idxRoomNext].start.x + std::rand() / roomScaleBX;
-        unsigned int pointRoomBY = rooms[idxRoomNext].start.y + std::rand() / roomScaleBY;
-        int dx = (int)pointRoomBX - (int)pointRoomAX;
-        int dy = (int)pointRoomBY - (int)pointRoomAY;
-        int tx = dx > 0 ? 1 : dx < 0 ? -1
-                                     : 0;
-        int ty = dy > 0 ? 1 : dy < 0 ? -1
-                                     : 0;
-        printf("connect - walk from %d %d to %d %d by %d %d\n",
-               pointRoomAX, pointRoomAY,
-               pointRoomBX, pointRoomBY,
-               tx, ty);
-        unsigned int y = pointRoomAY;
-        unsigned int x = pointRoomAX;
-        for (; y != pointRoomBY; y += ty)
-        {
-            levelDataInner.set(y * levelSize.x + x);
-        }
-        for (; x != pointRoomBX; x += tx)
-        {
-            levelDataInner.set(y * levelSize.x + x);
-        }
+	    int idxRoomNext = idxRoom + 1;
+	    int tNext = 0;
+	    int dNext = 100;
+	    for ( idxRoomNext = idxRoom; idxRoomNext < (int)rooms.size(); ++idxRoomNext)
+	    {
+		    if ( idxRoomNext == (int)idxRoom )
+		    {
+			    continue;
+		    }
+		    int x2 = rooms[idxRoomNext].start.x - rooms[idxRoom].start.x;
+		    x2 *= x2;
+		    int y2 = rooms[idxRoomNext].start.y - rooms[idxRoom].start.y;
+		    y2 *= y2;
+		    int dNextTmp = sqrt(x2 + y2);
+		    if ( dNextTmp <  dNext )
+		    {
+			    dNext = dNextTmp;
+			    tNext = idxRoomNext;
+		    }
+
+	    }
+	    idxRoomNext = tNext;
+	    printf("connect room %u with %d\n", idxRoom, idxRoomNext);
+	    unsigned int roomScaleAX = RAND_MAX / rooms[idxRoom].size.x;
+	    unsigned int roomScaleAY = RAND_MAX / rooms[idxRoom].size.y;
+	    unsigned int pointRoomAX = rooms[idxRoom].start.x + std::rand() / roomScaleAX;
+	    unsigned int pointRoomAY = rooms[idxRoom].start.y + std::rand() / roomScaleAY;
+	    unsigned int roomScaleBX = RAND_MAX / rooms[idxRoomNext].size.x;
+	    unsigned int roomScaleBY = RAND_MAX / rooms[idxRoomNext].size.y;
+	    unsigned int pointRoomBX = rooms[idxRoomNext].start.x + std::rand() / roomScaleBX;
+	    unsigned int pointRoomBY = rooms[idxRoomNext].start.y + std::rand() / roomScaleBY;
+	    int dx = (int)pointRoomBX - (int)pointRoomAX;
+	    int dy = (int)pointRoomBY - (int)pointRoomAY;
+	    int tx = dx > 0 ? 1 : dx < 0 ? -1
+		    : 0;
+	    int ty = dy > 0 ? 1 : dy < 0 ? -1
+		    : 0;
+	    /*
+	    printf("connect - walk from %d %d to %d %d by %d %d\n",
+			    pointRoomAX, pointRoomAY,
+			    pointRoomBX, pointRoomBY,
+			    tx, ty);
+			    */
+	    unsigned int y = pointRoomAY;
+	    unsigned int x = pointRoomAX;
+	    for (; y != pointRoomBY; y += ty)
+	    {
+		    levelDataInner.set(y * levelSize.x + x);
+	    }
+	    for (; x != pointRoomBX; x += tx)
+	    {
+		    levelDataInner.set(y * levelSize.x + x);
+	    }
     }
     printf("LEVEL: %d x %d\n", levelSize.x, levelSize.y);
     if ( levelSize.x > 100 || levelSize.y > 100 )
@@ -189,11 +217,11 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
                 level.tileData[Vec2i{2 * x + offset.x + 1, 2 * y + offset.y}] = {WALL, 0, true};
                 level.tileData[Vec2i{2 * x + offset.x + 1, 2 * y + offset.y + 1}] = {WALL, 0, true};
                 level.tileData[Vec2i{2 * x + offset.x, 2 * y + offset.y + 1}] = {WALL, 0, true};
-                printf("X");
+                printf("XX");
             }
             else
             {
-                printf(" ");
+                printf("  ");
             }
         }
         printf("\n");
