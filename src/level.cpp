@@ -7,6 +7,135 @@ typedef struct Room
     Vec2i size;
 } Room;
 
+bool buildRoomConnection(int idxRoom, int idxRoomNext, std::vector<Room> rooms, std::bitset<MAX_WIDTH * MAX_WIDTH> &levelData, std::bitset<MAX_WIDTH * MAX_WIDTH> &levelDataOuter, const int levelWidth)
+{
+    // walk towards edge of room
+    printf("connect room %u with %d\n", idxRoom, idxRoomNext);
+    unsigned int roomScaleAX = RAND_MAX / rooms[idxRoom].size.x;
+    unsigned int roomScaleAY = RAND_MAX / rooms[idxRoom].size.y;
+    int pointRoomAX = rooms[idxRoom].start.x + std::rand() / roomScaleAX;
+    int pointRoomAY = rooms[idxRoom].start.y + std::rand() / roomScaleAY;
+    unsigned int roomScaleBX = RAND_MAX / rooms[idxRoomNext].size.x;
+    unsigned int roomScaleBY = RAND_MAX / rooms[idxRoomNext].size.y;
+    int pointRoomBX = rooms[idxRoomNext].start.x + std::rand() / roomScaleBX;
+    int pointRoomBY = rooms[idxRoomNext].start.y + std::rand() / roomScaleBY;
+    int dx = (int)pointRoomBX - (int)pointRoomAX;
+    int dy = (int)pointRoomBY - (int)pointRoomAY;
+    int tx = dx > 0 ? 1 : dx < 0 ? -1
+                                 : 0;
+    int ty = dy > 0 ? 1 : dy < 0 ? -1
+                                 : 0;
+    if (abs(dx) > (dy))
+    {
+        ty = 0;
+    }
+    else
+    {
+        tx = 0;
+    }
+    /*
+    printf("connect - walk from %d %d to %d %d by %d %d\n",
+            pointRoomAX, pointRoomAY,
+            pointRoomBX, pointRoomBY,
+            tx, ty);
+            */
+    printf("connect - walk from %d %d to %d %d by %d %d\n",
+           pointRoomAX, pointRoomAY,
+           pointRoomBX, pointRoomBY,
+           tx, ty);
+    for (; ty != 0 && levelDataOuter.test(pointRoomAY * levelWidth + pointRoomAX); pointRoomAY += ty)
+        ;
+    for (; tx != 0 && levelDataOuter.test(pointRoomAY * levelWidth + pointRoomAX); pointRoomAX += tx)
+        ;
+    for (; ty != 0 && levelDataOuter.test(pointRoomBY * levelWidth + pointRoomBX); pointRoomBY -= ty)
+        ;
+    for (; tx != 0 && levelDataOuter.test(pointRoomBY * levelWidth + pointRoomBX); pointRoomBX -= tx)
+        ;
+    levelData.set(levelWidth * (pointRoomAY - ty) + (pointRoomAX - tx));
+    levelData.set(levelWidth * (pointRoomBY + ty) + (pointRoomBX + tx));
+    printf("connect - walk from %d %d to %d %d by %d %d\n",
+           pointRoomAX, pointRoomAY,
+           pointRoomBX, pointRoomBY,
+           tx, ty);
+    Vec2i start{pointRoomAX, pointRoomAY};
+    Vec2i end{pointRoomBX, pointRoomBY};
+
+    struct WeightedVec2i
+    {
+        Vec2i pos;
+        int distanceSquared;
+        std::vector<Vec2i> path;
+        std::set<Vec2i> visited;
+    };
+    std::vector<Vec2i> path;
+    std::set<Vec2i> seen;
+    auto cmp = [&](WeightedVec2i l, WeightedVec2i r)
+    { return l.distanceSquared > r.distanceSquared; };
+    std::priority_queue<WeightedVec2i, std::vector<WeightedVec2i>, decltype(cmp)> pq(cmp);
+
+    auto getWeightedVec2i = [](Vec2i pos, Vec2i target, std::vector<Vec2i> path, std::set<Vec2i> visited) -> WeightedVec2i
+    {
+        path.push_back(pos);
+        visited.insert(pos);
+        return WeightedVec2i{pos, (target.x - pos.x) * (target.x - pos.x) + (target.y - pos.y) * (target.y - pos.y), path, visited};
+    };
+
+    pq.push(getWeightedVec2i(start, end, {}, {start}));
+    int cnt = 0;
+    do
+    {
+        WeightedVec2i el = pq.top();
+        pq.pop();
+        seen = el.visited;
+        // printf("test path of length %lu to pos %d %d (target %d %d) pq size: %lu\n", el.path.size(), el.pos.x, el.pos.y, end.x, end.y, pq.size());
+        if (end == el.pos)
+        {
+            el.path.push_back(el.pos);
+            path = el.path;
+            break;
+        }
+        for (int x = -1; x < 2; ++x)
+        {
+            for (int y = -1; y < 2; ++y)
+            {
+                if (not(x == 0 || y == 0))
+                    continue;
+                unsigned int i = (el.pos.y + y) * levelWidth + (el.pos.x + x);
+                if (i >= levelDataOuter.size() || levelDataOuter.test(i))
+                    continue;
+                Vec2i next{el.pos.x + x, el.pos.y + y};
+                if (seen.count(next) != 0)
+                {
+                    continue;
+                }
+                pq.push(getWeightedVec2i(next, end, el.path, el.visited));
+            }
+        }
+        ++cnt;
+    } while (cnt < (levelWidth * levelWidth) && not pq.empty());
+    if (cnt >= (levelWidth * levelWidth * 3))
+    {
+        printf("could not find path from %d %d to %d %d\n", start.x, start.y, end.x, end.y);
+        levelData.set(levelWidth * (pointRoomAY - ty) + (pointRoomAX - tx), false);
+        levelData.set(levelWidth * (pointRoomBY + ty) + (pointRoomBX + tx), false);
+        return false;
+    }
+    std::vector<Vec2> vPath;
+    for (auto p : path)
+    {
+        levelData.set(levelWidth * p.y + p.x);
+        levelDataOuter.set((levelWidth * (p.y) + (p.x)));
+        continue;
+        for (int i = -1; i < 2; ++i)
+        {
+            for (int j = -1; j < 2; ++j)
+            {
+                levelDataOuter.set((levelWidth * (p.y + i) + (p.x + j)));
+            }
+        }
+    }
+    return true;
+}
 
 LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
 {
@@ -23,15 +152,15 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
     std::bitset<MAX_WIDTH * MAX_WIDTH> levelDataOuter(false);
     std::bitset<MAX_WIDTH * MAX_WIDTH> levelDataInner(false);
 
-    int maxNumRooms = 30;
+    int maxNumRooms = 25;
     int maxTries = 5;
     bool foundSpace = true;
     const Vec2i maxRoomSize{20, 20};
     const Vec2i minRoomSize{4, 4};
-    const int randScaleX = RAND_MAX / (levelSize.x + minRoomSize.x);
-    const int randScaleY = RAND_MAX / (levelSize.y + minRoomSize.y);
-    const int randRoomScaleX = RAND_MAX / (maxRoomSize.x - minRoomSize.y);
-    const int randRoomScaleY = RAND_MAX / (maxRoomSize.y - minRoomSize.y);
+    const unsigned int randScaleX = RAND_MAX / (levelSize.x - minRoomSize.x);
+    const unsigned int randScaleY = RAND_MAX / (levelSize.y - minRoomSize.y);
+    const unsigned int randRoomScaleX = RAND_MAX / (maxRoomSize.x - minRoomSize.y);
+    const unsigned int randRoomScaleY = RAND_MAX / (maxRoomSize.y - minRoomSize.y);
     for (int numRooms = 0; foundSpace && numRooms < maxNumRooms; ++numRooms)
     {
         std::bitset<MAX_WIDTH * MAX_WIDTH> tmpLevel(false);
@@ -126,6 +255,7 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
     for (unsigned int idxRoom = 0; idxRoom < rooms.size() - 1; ++idxRoom)
     {
 	    int idxRoomNext = idxRoom + 1;
+        /*
 	    int tNext = 0;
 	    int dNext = 100;
 	    for ( idxRoomNext = idxRoom; idxRoomNext < (int)rooms.size(); ++idxRoomNext)
@@ -139,15 +269,20 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
 		    int y2 = rooms[idxRoomNext].start.y - rooms[idxRoom].start.y;
 		    y2 *= y2;
 		    int dNextTmp = sqrt(x2 + y2);
-		    if ( dNextTmp <  dNext )
+		    if ( dNextTmp < dNext )
 		    {
 			    dNext = dNextTmp;
 			    tNext = idxRoomNext;
 		    }
-
 	    }
 	    idxRoomNext = tNext;
-	    printf("connect room %u with %d\n", idxRoom, idxRoomNext);
+        */
+        bool foundPath = buildRoomConnection(idxRoom, idxRoomNext, rooms, levelDataInner, levelDataOuter, levelSize.x);
+        if ( foundPath )
+        {
+            continue;
+        }
+	    printf("connect room directly %u with %d\n", idxRoom, idxRoomNext);
 	    unsigned int roomScaleAX = RAND_MAX / rooms[idxRoom].size.x;
 	    unsigned int roomScaleAY = RAND_MAX / rooms[idxRoom].size.y;
 	    unsigned int pointRoomAX = rooms[idxRoom].start.x + std::rand() / roomScaleAX;

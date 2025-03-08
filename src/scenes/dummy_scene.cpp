@@ -17,7 +17,7 @@ Camera::Camera() : System(em.newSystem("camera"))
     
     memcpy(this->view, identity, sizeof(Mat4));
     memcpy(this->proj, identity, sizeof(Mat4));
-    zoom(0.125);
+    //zoom(0.125);
     zoom(0.075);
     //zoom(0.250);
     this->proj[0] *= 0.75;
@@ -211,13 +211,14 @@ bool DummyLevel::update(float delta)
                 texSize);
     }
     int newNumTiles = idxTile;
+    printf("numTiles: used %d/%d\n", idxTile, bgObj->numInstances);
     // disable old tiles
     for ( ; idxTile < numTiles; ++idxTile )
     {
         bgObj->updateInstance(idxTile, false, Vec2{0,0}, Vec2{0,0}, Vec2{0,0});
     }
     numTiles = newNumTiles;
-    printf("numTiles: %d\n", numTiles);
+    printf("numTiles: %d/%d\n", numTiles, bgObj->numInstances);
 
     ++frames;
     // nothing to to   

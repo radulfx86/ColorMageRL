@@ -138,7 +138,7 @@ void InstancedObject2D::updateInstanceType(int instance, bool enabled, Vec2 texP
 {
     if ( instance > numInstances )
     {
-        return;
+        //return;
     }
     glUseProgram(this->program);
     char uniformName[50];
@@ -160,7 +160,7 @@ void InstancedObject2D::updateInstanceTypePos(int instance, bool enabled, Vec2 p
 {
     if ( instance > numInstances )
     {
-        return;
+        //return;
     }
     glUseProgram(this->program);
     char uniformName[50];
@@ -187,7 +187,7 @@ void InstancedObject2D::updateInstance(int instance, bool enabled, Vec2 pos, Vec
 {
     if ( instance > numInstances )
     {
-        return;
+        //return;
     }
     glUseProgram(this->program);
     char uniformName[50];
