@@ -393,7 +393,7 @@ void ObjectFactory::createInstanceBackground(InstancedObject2D &obj, GLuint prog
     obj.pos = Vec2{0,0};
     int i = 0;
     float w = 0.25;
-    float h = 0.125;
+    float h = 1.0/12.0;
     for ( int x = -5; x < 5; ++x )
     {
         for ( int y = -7; y < 7; ++y )
@@ -412,4 +412,5 @@ void ObjectFactory::createInstanceBackground(InstancedObject2D &obj, GLuint prog
                 break;
     }
     obj.numInstances = i;
+    obj.numInstances = 256;
 }

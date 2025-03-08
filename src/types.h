@@ -42,7 +42,7 @@ typedef float Mat4[16];
 
 typedef float Mat2[4];
 
-#define MAX_WIDTH 100
+#define MAX_WIDTH 1000
 
 typedef struct Vec2i
 {

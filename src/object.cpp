@@ -136,6 +136,10 @@ void InstancedObject2D::updateAnimation(float delta_s)
 
 void InstancedObject2D::updateInstanceType(int instance, bool enabled, Vec2 texPos)
 {
+    if ( instance > numInstances )
+    {
+        return;
+    }
     glUseProgram(this->program);
     char uniformName[50];
     sprintf(uniformName,"texInfo[%i].enabled", instance);
@@ -154,6 +158,10 @@ void InstancedObject2D::updateInstanceType(int instance, bool enabled, Vec2 texP
 
 void InstancedObject2D::updateInstanceTypePos(int instance, bool enabled, Vec2 pos, Vec2 texPos)
 {
+    if ( instance > numInstances )
+    {
+        return;
+    }
     glUseProgram(this->program);
     char uniformName[50];
     sprintf(uniformName,"texInfo[%i].enabled", instance);
@@ -177,6 +185,10 @@ void InstancedObject2D::updateInstanceTypePos(int instance, bool enabled, Vec2 p
 
 void InstancedObject2D::updateInstance(int instance, bool enabled, Vec2 pos, Vec2 texPos, Vec2 texSize)
 {
+    if ( instance > numInstances )
+    {
+        return;
+    }
     glUseProgram(this->program);
     char uniformName[50];
     sprintf(uniformName,"texInfo[%i].enabled", instance);

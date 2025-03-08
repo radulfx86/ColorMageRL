@@ -15,6 +15,8 @@ public:
     {
         WALL,
         DOOR,
+        STAIRS_UP,
+        STAIRS_DOWN,
         NUM_LEVEL_TILE_TYPES
     };
     struct LevelTile
@@ -25,125 +27,73 @@ public:
     };
     int getTileIndex(Vec2i pos)
     {
-        if ( data.find(pos) == data.end() )
+        if ( tileData.find(pos) == tileData.end() )
         {
             return -1;
         }
-        return data[pos].orientation;
+        return tileData[pos].orientation;
     }
 
     LevelData() {}
-    static LevelData load(std::string path, Vec2i offset)
-    {
-        LevelData level;
-        int w = 0;
-        int h = 0;
-        try
-        {
-            std::ifstream istr(path, std::ios_base::in);
-            int y = 0;
-            for( std::string line; std::getline(istr, line); ++y)
-            {
-                printf("y: %2d ", y);
-                for ( int x = 0; x < (int)line.length(); ++x )
-                {
-                    printf(">(%d,%d)<", x+offset.x,y+offset.y);
-                    if ( x > w )
-                    {
-                        w = x;
-                    }
-                    switch (line[x])
-                    {
-                        case 'W' :
-                            level.data[Vec2i{2*x+offset.x,2*y+offset.y}] = {WALL,0,true};
-                            level.data[Vec2i{2*x+offset.x+1,2*y+offset.y}] = {WALL,0,true};
-                            level.data[Vec2i{2*x+offset.x+1,2*y+offset.y+1}] = {WALL,0,true};
-                            level.data[Vec2i{2*x+offset.x,2*y+offset.y+1}] = {WALL,0,true};
-                            break;
-                        case 'D' :
-                            level.data[Vec2i{2*x+offset.x,2*y+offset.y}] = {DOOR,0,false};
-                            level.data[Vec2i{2*x+offset.x+1,2*y+offset.y}] = {DOOR,0,false};
-                            level.data[Vec2i{2*x+offset.x+1,2*y+offset.y+1}] = {DOOR,0,false};
-                            level.data[Vec2i{2*x+offset.x,2*y+offset.y+1}] = {DOOR,0,false};
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                printf("\n");
-                if ( y > h )
-                {
-                    h = y;
-                }
-            }
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
+    static LevelData load(std::string path, Vec2i offset);
+    
+    static LevelData generate(Vec2i levelSize, int numSubLevels);
 
-        // index in tile-set to be used
-        // indices correspond to the sum of neighbor positions
-        //  1		1/2		2  
-        //  1/2		x		2/8
-        //   4		4/8     8
-        for ( std::pair<const Vec2i, LevelTile> &tile : level.data )
-        {
-            int x = tile.first.x;
-            int y = tile.first.y;
-            int cnt = 0;
-            cnt += (level.data.find(Vec2i{x, y - 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x - 1, y - 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x - 1, y}) != level.data.end())
-                 ? 4 : 0;
-            cnt += (level.data.find(Vec2i{x, y - 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x + 1, y - 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x + 1, y}) != level.data.end())
-                 ? 8 : 0;
-            cnt += (level.data.find(Vec2i{x, y + 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x - 1, y + 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x - 1, y}) != level.data.end())
-                 ? 1 : 0;
-            cnt += (level.data.find(Vec2i{x, y + 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x + 1, y + 1}) != level.data.end())
-                    && (level.data.find(Vec2i{x + 1, y}) != level.data.end())
-                 ? 2 : 0;
-            tile.second.orientation = cnt;
-            if ( tile.second.type != WALL )
-            {
-                //tile.second.orientation = 0;
-            }
-            printf("LEVEL %2d %2d -> %d\n", x, y, cnt);
-        }
-        printf("LEVEL size: %ld\n", level.data.size());
-        
-        return level;
-    }
+    static void updateAutoTilerOrientation(LevelData &level);
 
     bool intersects(const Bounds &b)
     {
-        return (data.find(Vec2i{(int)b.pos.x, (int)b.pos.y}) != data.end() && data[Vec2i{(int)b.pos.x, (int)b.pos.y}].solid)
-                || (data.find(Vec2i{(int)(b.pos.x + b.size.x), (int)b.pos.y}) != data.end() && data[Vec2i{(int)(b.pos.x + b.size.x), (int)b.pos.y}].solid)
-                || (data.find(Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}) != data.end() && data[Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}].solid)
-                || (data.find(Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}) != data.end() && data[Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}].solid);
+        return (tileData.find(Vec2i{(int)b.pos.x, (int)b.pos.y}) != tileData.end() && tileData[Vec2i{(int)b.pos.x, (int)b.pos.y}].solid)
+                || (tileData.find(Vec2i{(int)(b.pos.x + b.size.x), (int)b.pos.y}) != tileData.end() && tileData[Vec2i{(int)(b.pos.x + b.size.x), (int)b.pos.y}].solid)
+                || (tileData.find(Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}].solid)
+                || (tileData.find(Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}].solid);
     }
     std::vector<std::pair<Vec2i, LevelTile>> getTilesInBounds(const Bounds &b)
     {
         std::vector<std::pair<Vec2i, LevelTile>> tiles;
-        Vec2i min = {(int)b.pos.x, (int)b.pos.y};
-        Vec2i max = {(int)std::ceil(b.pos.x + b.size.x), (int)(std::ceil(b.pos.y + b.size.y))};
+        for ( int dist = 0; dist < 16; ++dist )
+        {
+            for ( int x = -dist; x < dist - 1; ++x )
+            {
+                Vec2i tmp{(int)(b.pos.x + x), (int)(b.pos.y - dist)};
+                if ( tileData.find(tmp) != tileData.end() )
+                {
+                    tiles.push_back(std::pair<Vec2i, LevelTile>(tmp, tileData[tmp]));
+                }
+                Vec2i tmp2{(int)(b.pos.x + x + 1), (int)(b.pos.y + dist - 1)};
+                if ( tileData.find(tmp2) != tileData.end() )
+                {
+                    tiles.push_back(std::pair<Vec2i, LevelTile>(tmp2, tileData[tmp2]));
+                }
+                Vec2i tmp3{(int)(b.pos.x - dist), (int)(b.pos.y + x + 1)};
+                if ( tileData.find(tmp3) != tileData.end() )
+                {
+                    tiles.push_back(std::pair<Vec2i, LevelTile>(tmp3, tileData[tmp3]));
+                }
+                Vec2i tmp4{(int)(b.pos.x + dist - 1), (int)(b.pos.y + x)};
+                if ( tileData.find(tmp4) != tileData.end() )
+                {
+                    tiles.push_back(std::pair<Vec2i, LevelTile>(tmp4, tileData[tmp4]));
+                }
+
+            }
+        }
+        #if 0
+        Vec2i min = {(int)b.pos.x - offset.x, (int)b.pos.y - offset.y};
+        Vec2i max = {(int)std::ceil(b.pos.x + b.size.x - offset.x), (int)(std::ceil(b.pos.y + b.size.y - offset.y))};
         for ( int x = min.x; x < max.x ; ++x )
         {
             for ( int y = min.y; y < max.y; ++y )
             {
                 Vec2i tmp{x,y};
-                if ( data.find(tmp) != data.end() )
+                if ( tileData.find(tmp) != tileData.end() )
                 {
-                    tiles.push_back(std::pair<Vec2i, LevelTile>(tmp, data[tmp]));
+                    tiles.push_back(std::pair<Vec2i, LevelTile>(tmp, tileData[tmp]));
                 }
             }
         }
-        printf("number of active tiles: %lu of %lu\n", tiles.size(), data.size());
+        #endif
+        printf("number of active tiles: %lu of %lu\n", tiles.size(), tileData.size());
         return tiles;
     }
     std::vector<Vec2> getPathTo(Vec2i start, Vec2i end)
@@ -183,7 +133,7 @@ public:
                     if ( not (x == 0 || y == 0) )
                         continue;
                     Vec2i next{el.pos.x + x, el.pos.y + y};
-                    if (data.find(next) != data.end())
+                    if (tileData.find(next) != tileData.end())
                     {
                         continue;
                     }
@@ -199,9 +149,16 @@ public:
         }
         return vPath;
     }
-private:
-    std::map<Vec2i, LevelTile> data;
-};
 
+
+
+    Vec2 getEntryPoint() const
+    {
+        return {(float)entryPoint.x, (float)entryPoint.y};
+    }
+private:
+    std::map<Vec2i, LevelTile> tileData;
+    Vec2i entryPoint;
+};
 
 #endif // _LEVEL_H_

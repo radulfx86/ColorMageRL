@@ -18,6 +18,8 @@ Camera::Camera() : System(em.newSystem("camera"))
     memcpy(this->view, identity, sizeof(Mat4));
     memcpy(this->proj, identity, sizeof(Mat4));
     zoom(0.125);
+    zoom(0.075);
+    //zoom(0.250);
     this->proj[0] *= 0.75;
 }
 
@@ -39,8 +41,9 @@ void Camera::zoom(float level)
 Bounds Camera::getViewCone()
 {
     Bounds viewBounds;
-    viewBounds.size = Vec2{15,15};
+    viewBounds.size = Vec2{15, 15};
     viewBounds.pos = Vec2{pos.x - viewBounds.size.x/2, pos.y - viewBounds.size.y/2};
+    printf("viewCone: {%f %f} {%f %f} pos at {%f %f}\n", viewBounds.pos.x, viewBounds.pos.y, viewBounds.size.x, viewBounds.size.y, pos.x, pos.y);
     return viewBounds;
 }
 
@@ -64,7 +67,7 @@ void Camera::update(float delta)
     }
 }
 
-DummyLevel::DummyLevel() : deltaSum(0), numTiles(100)
+DummyLevel::DummyLevel() : deltaSum(0), numTiles(500)
 {
     info = new Text2D;
     info2 = new Text2D;
@@ -78,7 +81,8 @@ DummyLevel::DummyLevel() : deltaSum(0), numTiles(100)
     background = ObjectFactory::initBackground();
 
     //EntityID levelData = em.newEntity("level_data");
-    data = LevelData::load("level.txt", Vec2i{-5,-5});
+    // data = LevelData::load("level.txt", Vec2i{-5,-5});
+    data = LevelData::generate(Vec2i{50,30}, 0);
     //LevelData currentLevelData = LevelData::generate(seek = 0);
     /*
     currentLevelData->width = 100;
@@ -96,7 +100,7 @@ DummyLevel::DummyLevel() : deltaSum(0), numTiles(100)
 
     em.addComponent<Object2D*>(player, playerGraphics);
     Bounds *playerBounds = new Bounds;
-    playerBounds->pos = {0,0};
+    playerBounds->pos = data.getEntryPoint();
     playerBounds->size = {1,1};
     em.addComponent<Bounds*>(player, playerBounds);
 
@@ -193,8 +197,9 @@ bool DummyLevel::update(float delta)
 
     InstancedObject2D *bgObj = (InstancedObject2D*)em.getComponent<Object2D*>(background);
     /// TODO get bounds from actual cam
-    Bounds cameraBounds = camera.getViewCone();
-    std::vector<std::pair<Vec2i, LevelData::LevelTile>> tiles = data.getTilesInBounds(cameraBounds);
+    //Bounds cameraBounds = camera.getViewCone();
+    Bounds *playerBounds = em.getComponent<Bounds*>(player);
+    std::vector<std::pair<Vec2i, LevelData::LevelTile>> tiles = data.getTilesInBounds(*playerBounds);
 
     int idxTile = 0;
     for ( auto tile : tiles )
@@ -212,6 +217,7 @@ bool DummyLevel::update(float delta)
         bgObj->updateInstance(idxTile, false, Vec2{0,0}, Vec2{0,0}, Vec2{0,0});
     }
     numTiles = newNumTiles;
+    printf("numTiles: %d\n", numTiles);
 
     ++frames;
     // nothing to to   
