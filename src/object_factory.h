@@ -10,6 +10,8 @@ namespace ObjectFactory
 
 void createInstancedObject(InstancedObject2D &obj, GLuint program);
 
+EntityID initBackgroundSingleInstance();
+
 EntityID initBackground();
 /*
 EntityID addNPC(GLuint tex, GLuint program);

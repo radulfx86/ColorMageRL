@@ -32,7 +32,7 @@ void ObjectFactory::createInstancedObject(InstancedObject2D &obj, GLuint program
     obj.numInstances = i;
 }
 
-EntityID ObjectFactory::initBackground()
+EntityID ObjectFactory::initBackgroundSingleInstance()
 {
     InstancedObject2D *iobj = new InstancedObject2D;
     GLuint instancedProgram = createShader(loadText("shaders/simple.instanced.vs").c_str(), loadText("shaders/simple.instanced.fs").c_str());
@@ -47,7 +47,38 @@ EntityID ObjectFactory::initBackground()
     //MotionParameters_t *bgMotion = new MotionParameters_t;
     //bgMotion->speed = {0,0};
     //EntityManager::getInstance().addComponent<MotionParameters_t*>(background, bgMotion);
-    printf("level tex: %d\n", iobj->tex);
+    //printf("level tex: %d\n", iobj->tex);
+
+    return background;
+}
+
+EntityID ObjectFactory::initBackground()
+{
+    MultiInstancedObject2D *multiInstancedObject = new MultiInstancedObject2D;
+    GLuint tex = loadTexture("assets/images/tiles.png");
+    std::string vShaderText = loadText("shaders/simple.instanced.vs");
+    std::string fShaderText = loadText("shaders/simple.instanced.fs");
+    for ( int i = 0; i < 1; ++i )
+    {
+        InstancedObject2D *iobj = new InstancedObject2D;
+        GLuint instancedProgram = createShader(vShaderText.c_str(), fShaderText.c_str());
+        // createInstancedObject(*iobj, instancedProgram);
+        ObjectFactory::createInstanceBackground(*iobj, instancedProgram);
+        iobj->tex = tex;
+        multiInstancedObject->subInstances.push_back(iobj);
+    }
+    
+    multiInstancedObject->numInstances = multiInstancedObject->subInstances[0]->numInstances;
+
+    EntityID background = EntityManager::getInstance().newEntity("background");
+    EntityManager::getInstance().addComponent<Object2D*>(background,multiInstancedObject);
+    Bounds *bgbounds = new Bounds;
+    bgbounds->pos = Vec2{0,0};
+    EntityManager::getInstance().addComponent<Bounds*>(background, bgbounds);
+    //MotionParameters_t *bgMotion = new MotionParameters_t;
+    //bgMotion->speed = {0,0};
+    //EntityManager::getInstance().addComponent<MotionParameters_t*>(background, bgMotion);
+    //printf("level tex: %d\n", iobj->tex);
 
     return background;
 }

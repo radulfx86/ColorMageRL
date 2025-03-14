@@ -232,6 +232,64 @@ void InstancedObject2D::draw()
     glUseProgram(0);
 }
 
+void MultiInstancedObject2D::updateAnimation(float delta_s)
+{
+    for ( InstancedObject2D *obj : subInstances )
+    {
+        obj->updateAnimation(delta_s);
+    }
+}
+
+void MultiInstancedObject2D::updateInstanceType(int instance, bool enabled, Vec2 texPos)
+{
+    int subInstance = instance / numInstances;
+    int instanceIndex = instance % numInstances;
+    subInstances[subInstance]->updateInstanceType(instanceIndex, enabled, texPos);
+}
+
+void MultiInstancedObject2D::updateInstanceTypePos(int instance, bool enabled, Vec2 pos, Vec2 texPos)
+{
+    int subInstance = instance / numInstances;
+    int instanceIndex = instance % numInstances;
+    subInstances[subInstance]->updateInstanceTypePos(instanceIndex, enabled, pos, texPos);
+}
+
+void MultiInstancedObject2D::updateInstance(int instance, bool enabled, Vec2 pos, Vec2 texPos, Vec2 texSize)
+{
+    size_t subInstance = instance / numInstances;
+    size_t instanceIndex = instance % numInstances;
+    printf("%s(%d -> (instance %lu, index %lu))\n", __func__, instance, subInstance, instanceIndex);
+    //subInstances[subInstance]->updateInstance(instanceIndex, enabled, pos, texPos, texSize);
+    if ( subInstance < subInstances.size() )
+    {
+        subInstances[subInstance]->updateInstance(instanceIndex, enabled, pos, texPos, texSize);
+    }
+}
+
+void MultiInstancedObject2D::draw()
+{
+    for ( InstancedObject2D *obj : subInstances )
+    {
+        obj->draw();
+    }
+}
+
+void MultiInstancedObject2D::setPosition(Vec2 pos)
+{
+    for ( InstancedObject2D *obj : subInstances )
+    {
+        obj->setPosition(pos);
+    }
+}
+
+void MultiInstancedObject2D::updateCamera(float view[16], float proj[16])
+{
+    for ( InstancedObject2D *obj : subInstances )
+    {
+        obj->updateCamera(view, proj);
+    }
+}
+
 void Text2D::setText(std::string text)
 {
     int oldNumInstances = numInstances;

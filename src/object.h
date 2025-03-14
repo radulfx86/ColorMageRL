@@ -43,6 +43,23 @@ public:
     void updateInstanceTypePos(int instance, bool enabled, Vec2 pos, Vec2 texPos);
 };
 
+
+class MultiInstancedObject2D : public Object2D
+{
+public:
+    int numInstances;
+    Vec2 pos;
+    Vec2 size;
+    std::vector<InstancedObject2D*> subInstances;
+    virtual void draw() override;
+    virtual void updateAnimation(float delta_s) override;
+    virtual void setPosition(Vec2 pos) override;
+    virtual void updateCamera(float view[16], float proj[16]) override;
+    void updateInstance(int instance, bool enabled, Vec2 pos, Vec2 texPos, Vec2 texSize);
+    void updateInstanceType(int instance, bool enabled, Vec2 texPos);
+    void updateInstanceTypePos(int instance, bool enabled, Vec2 pos, Vec2 texPos);
+};
+
 class Text2D : public InstancedObject2D
 {
 public:

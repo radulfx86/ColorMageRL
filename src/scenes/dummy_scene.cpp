@@ -201,7 +201,8 @@ bool DummyLevel::update(float delta)
     }
     camera.update(delta);
 
-    InstancedObject2D *bgObj = (InstancedObject2D*)em.getComponent<Object2D*>(background);
+    //InstancedObject2D *bgObj = (InstancedObject2D*)em.getComponent<Object2D*>(background);
+    MultiInstancedObject2D *bgObj = (MultiInstancedObject2D*)em.getComponent<Object2D*>(background);
     /// TODO get bounds from actual cam
     //Bounds cameraBounds = camera.getViewCone();
     Bounds *playerBounds = em.getComponent<Bounds*>(player);
