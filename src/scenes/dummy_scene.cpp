@@ -140,8 +140,14 @@ void DummyLevel::handleAction(EntityID eid, Action action)
         {
             Vec2 delta{(float)action.value_i.x, (float)action.value_i.y};
             printf("handleAction(%d)\n", eid);
-            bounds->pos = bounds->pos + delta;   
-            target->setPosition(target->pos + delta);
+            Bounds tmpBounds;
+            tmpBounds.pos = bounds->pos + delta;
+            tmpBounds.size = bounds->size;
+            if ( not data.intersects(tmpBounds))
+            {
+                bounds->pos = bounds->pos + delta;   
+                target->setPosition(target->pos + delta);
+            }
         }
         break;
     }

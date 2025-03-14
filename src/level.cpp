@@ -190,8 +190,9 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
         {
             int roomWidth = minRoomSize.x + std::rand() / randRoomScaleX;
             int roomHeight = minRoomSize.y + std::rand() / randRoomScaleY;
-	    roomWidth = maxRoomSize.x;
-	    roomHeight = maxRoomSize.y;
+            /// TODO use random number for room size?
+            roomWidth = maxRoomSize.x;
+            roomHeight = maxRoomSize.y;
             if ( levelSize.x <= roomWidth + startRandX )
             {
                 printf("reduce width from %d to %d\n", roomWidth, levelSize.x - startRandX - 1);
@@ -367,7 +368,8 @@ LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
     unsigned int roomScaleAY = RAND_MAX / rooms[0].size.y;
     int x = rooms[0].start.x + std::rand() / roomScaleAX;
     int y = rooms[0].start.y + std::rand() / roomScaleAY;
-    level.entryPoint = Vec2i{x,y};
+    level.entryPoint = Vec2i{x*2,y*2};
+
 
 
     printf("generated %lu rooms\n", rooms.size());
