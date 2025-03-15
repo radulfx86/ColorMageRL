@@ -4,6 +4,14 @@
 #include <map>
 #include <unordered_map>
 
+#define CHECK_GL_ERROR() \
+do { \
+    GLenum err = glGetError(); \
+    if ( err != GL_NO_ERROR ) { \
+        printf("FAILED at %s in %s %d\n", __func__, __FILE__, __LINE__ ); \
+    } \
+} while(0)
+
 class Object2D : public Drawable
 {
 public:
@@ -27,10 +35,10 @@ public:
     }
 };
 
-class MultiObject2D : Object2D
+class MultiObject2D : public Object2D
 {
 public:
-    MultiObject2D() {}
+    MultiObject2D(std::vector<Object2D*> objects = {}) : subObjects(objects){}
 
     virtual void updateAnimation(float delta_s) override
     {

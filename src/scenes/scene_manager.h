@@ -19,7 +19,7 @@ public:
 
     static void switchScene(Scene2D &oldScene, Scene2D &newScene, bool stop = false);
 
-    void initializeScenes();
+    void initializeScenes(Level *title = 0, Level *level = 0, Level *gameover = 0);
 
     void start(SceneTypes scene = SCENE_TITLE);
 

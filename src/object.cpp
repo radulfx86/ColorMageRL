@@ -11,12 +11,13 @@ void Object2D::draw()
     glUseProgram(this->program);
 
     glActiveTexture(GL_TEXTURE0);// + texOffset);
-    printf("binding texture %d\n", this->tex);
+    //printf("binding texture %d\n", this->tex);
     glBindTexture(GL_TEXTURE_2D, this->tex);
 
     glBindVertexArray(this->vao);
 
     glDrawArrays(GL_TRIANGLE_STRIP,0,4);
+    CHECK_GL_ERROR();
 
     glBindVertexArray(0);
 
@@ -26,7 +27,7 @@ void Object2D::draw()
 void Object2D::setAnimation(Direction_t animDir)
 {
     animation.currentDirection = animDir;
-    printf("setAnimation(%d)\n", animDir);
+    //printf("setAnimation(%d)\n", animDir);
 }
 
 void Object2D::setPosition(Vec2 pos)
@@ -45,7 +46,7 @@ void Object2D::setPosition(Vec2 pos)
 
 void Object2D::updateAnimation(float delta_s)
 {
-    printf("animation direction: %d for object %p program %d\n", this->animation.currentDirection, this, program);
+    //printf("animation direction: %d for object %p program %d\n", this->animation.currentDirection, this, program);
     bool updated = false;
     if ( this->animation.frames[this->animation.currentDirection].size() > 1 )
     {
@@ -198,8 +199,6 @@ void InstancedObject2D::updateInstance(int instance, bool enabled, Vec2 pos, Vec
     {
         return;
     }
-    printf("%s(%d, %f %f, %f %f, %f %f)\n",
-        __func__, instance, pos.x, pos.y, texPos.x, texPos.y, texSize.x, texSize.y);
     sprintf(uniformName,"texInfo[%i].pos", instance);
     GLuint posUniform = glGetUniformLocation(this->program, uniformName);
     float vpos[2] = {this->pos.x + pos.x * this->size.x, this->pos.y + pos.y * this->size.y};
@@ -220,12 +219,13 @@ void InstancedObject2D::draw()
 {
     glUseProgram(this->program);
     glActiveTexture(GL_TEXTURE0);// + texOffset);
-    printf("binding texture %d\n", this->tex);
+    //printf("binding texture %d\n", this->tex);
     glBindTexture(GL_TEXTURE_2D, this->tex);
 
     glBindVertexArray(this->vao);
 
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, this->numInstances);
+    CHECK_GL_ERROR();
 
     glBindVertexArray(0);
 
@@ -250,7 +250,6 @@ void Text2D::setText(std::string text)
         //InstancedObject2D::updateInstanceType(textIndex[text[idxText]], true, Vec2{0,0});
         int idxChar = textIndex[text[idxText]];
         Vec2 texPos{(float)(idxChar % this->textureColumns), (float)(idxChar / this->textureColumns) };
-        printf("set Text %d '%c' -> %d t: %f %f p: %f %f\n", idxTextOut, text[idxText], idxChar, texPos.x, texPos.y, pos.x, pos.y);
         InstancedObject2D::updateInstance(idxTextOut, true, pos, texPos, this->characterSize);
         ++idxTextOut;
     }
@@ -302,6 +301,7 @@ void Path2D::draw()
     glBindVertexArray(this->vao);
 
     glDrawArrays(GL_LINE_STRIP,0,vertexData.size());
+    CHECK_GL_ERROR();
 
     glBindVertexArray(0);
 
@@ -345,6 +345,7 @@ Path2D::Path2D(std::vector<Vec2> elements, float color[3])
     glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, idMat);
     glUniform3fv(glGetUniformLocation(program, "color"), 1, color);
     glUseProgram(0);
+    CHECK_GL_ERROR();
 }
 
 void Path2D::setPath(std::vector<Vec2> elements)
@@ -369,6 +370,7 @@ void Path2D::setPath(std::vector<Vec2> elements)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    CHECK_GL_ERROR();
 }
 
 void Path2D::setColor(float color[3])

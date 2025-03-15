@@ -131,6 +131,8 @@ typedef enum
 typedef struct {
     Vec2 speed;
     Vec2 acc;
+    bool onGround;
+    bool onWall;
 } MotionParameters_t;
 
 typedef struct Animation {

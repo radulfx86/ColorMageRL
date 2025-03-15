@@ -15,7 +15,6 @@ void ObjectFactory::createInstancedObject(InstancedObject2D &obj, GLuint program
 {
     createObject(obj, program);
     obj.size = Vec2{1,1};
-    obj.pos = Vec2{0,0};
     int i = 0;
     for ( int x = -2; x < 2; ++x )
     {
@@ -208,6 +207,7 @@ EntityID ObjectFactory::initPlayer(Object2D *obj)
 //void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize = 1.0, Vec2 spriteSize = {1,1}, Vec2i spritePos = {0,0})
 void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize, Vec2 spriteSize, Vec2i spritePos)
 {
+    obj.pos = Vec2{0,0};
     obj.program = program;
     glGenVertexArrays(1, &obj.vao);
     glBindVertexArray(obj.vao);
@@ -279,11 +279,13 @@ void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize, 
         {{10,0}, {w,1.f}, false,  {0,0}},
         {{11,0}, {w,1.f}, false,  {0,0}},
     };
+    CHECK_GL_ERROR();
 }
 
 Object2D *ObjectFactory::createSimpleBgObject(float tileSize, Vec2 spriteSize, Vec2i spritePos)
 {
     Object2D *obj = new Object2D;
+    obj->pos = Vec2{0,0};
     obj->program = createShader(loadText("shaders/simple.vs").c_str(), loadText("shaders/simple.fs").c_str());
     glGenVertexArrays(1, &obj->vao);
     glBindVertexArray(obj->vao);
@@ -335,6 +337,7 @@ Object2D *ObjectFactory::createSimpleBgObject(float tileSize, Vec2 spriteSize, V
         GLuint texSizeUniform = glGetUniformLocation(obj->program, "texInfo.texSize");
         glUniform2fv(texSizeUniform, 1, size);
         glUseProgram(0);
+    CHECK_GL_ERROR();
     return obj;
 }
 

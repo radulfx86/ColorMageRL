@@ -17,13 +17,20 @@ void SceneManager::switchScene(Scene2D &oldScene, Scene2D &newScene, bool stop)
     startMainLoop(newScene);
 }
 
-void SceneManager::initializeScenes()
+void SceneManager::initializeScenes(Level *title, Level *level, Level *gameover)
 {
     printf("creating scenes\n");
     printf("title\n");
     Scene2D &titleScreen = getScene(SCENE_TITLE);
     titleScreen.name.assign("TITLE");
-    titleScreen.currentLevel = new TitleScreen;
+    if ( title )
+    {
+        titleScreen.currentLevel = title;
+    }
+    else
+    {
+        titleScreen.currentLevel = new TitleScreen;
+    }
     initScene(titleScreen);
     titleScreen.controller = new TitleController;
     titleScreen.bg_color[0] = 0.3;
@@ -34,7 +41,14 @@ void SceneManager::initializeScenes()
     printf("level\n");
     Scene2D &scene = getScene(SCENE_LEVEL);
     scene.name.assign("LEVEL");
-    scene.currentLevel = new DummyLevel;
+    if ( level )
+    {
+        scene.currentLevel = level;
+    }
+    else
+    {
+        scene.currentLevel = new DummyLevel;
+    }
     scene.controller = new GameController(((DummyLevel*)scene.currentLevel)->getTarget());
     scene.bg_color[0] = 0.0;
     scene.bg_color[1] = 0.2;
@@ -43,7 +57,14 @@ void SceneManager::initializeScenes()
 
     printf("gameover\n");
     Scene2D &gameoverScreen = getScene(SCENE_GAMEOVER);
-    gameoverScreen.currentLevel = new GameoverScreen;
+    if ( gameover )
+    {
+        gameoverScreen.currentLevel = gameover;
+    }
+    else
+    {
+        gameoverScreen.currentLevel = new GameoverScreen;
+    }
     gameoverScreen.name.assign("GAMEOVER");
     gameoverScreen.bg_color[0] = 0.4;
     gameoverScreen.bg_color[1] = 0.0;
