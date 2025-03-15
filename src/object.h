@@ -27,6 +27,47 @@ public:
     }
 };
 
+class MultiObject2D : Object2D
+{
+public:
+    MultiObject2D() {}
+
+    virtual void updateAnimation(float delta_s) override
+    {
+        for ( Object2D *obj : subObjects )
+        {
+            obj->updateAnimation(delta_s);
+        }
+    }
+    virtual void draw() override
+    {
+        for ( Object2D *obj : subObjects )
+        {
+            obj->draw();
+        }
+    }
+    virtual void setPosition(Vec2 pos) override
+    {
+        for ( Object2D *obj : subObjects )
+        {
+            obj->setPosition(pos);
+        }
+    }
+    virtual void updateCamera(float view[16], float proj[16]) override
+    {
+        for ( Object2D *obj : subObjects )
+        {
+            obj->updateCamera(view, proj);
+        }
+    }
+    void addObject(Object2D *obj)
+    {
+        subObjects.push_back(obj);
+    }
+private:
+    std::vector<Object2D*> subObjects;
+};
+
 class InstancedObject2D : public Object2D
 {
 public:

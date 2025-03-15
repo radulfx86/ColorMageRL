@@ -74,7 +74,11 @@ typedef struct Vec2
     float y;
     friend Vec2 operator+(const Vec2 &a, const Vec2 &b)
     {
-        return Vec2{a.x+b.x, a.y+b.y};
+        return Vec2{a.x + b.x, a.y + b.y};
+    }
+    friend Vec2 operator*(const Vec2 &a, const float &p)
+    {
+        return Vec2{a.x * p, a.y * p};
     }
  } Vec2;
 
@@ -123,6 +127,11 @@ typedef enum
     DOWN,
     NUM_DIRECTIONS
 } Direction_t;
+
+typedef struct {
+    Vec2 speed;
+    Vec2 acc;
+} MotionParameters_t;
 
 typedef struct Animation {
     std::array<std::vector<TexInfo>,NUM_DIRECTIONS> frames;

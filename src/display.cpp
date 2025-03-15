@@ -78,8 +78,9 @@ EM_BOOL keyup_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, v
     return 0;
 }
 
-void initGL()
+void initGL(const char *title)
 {
+    emscripten_set_window_title(title);
     EmscriptenWebGLContextAttributes attrs;
     emscripten_webgl_init_context_attributes(&attrs);
 
@@ -204,7 +205,7 @@ void startMainLoop(Scene2D &scene)
     }
 }
 
-void initGL()
+void initGL(const char *title)
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
@@ -216,7 +217,7 @@ void initGL()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    window = SDL_CreateWindow("meh", 0, 0, 512, 512, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow(title, 0, 0, 512, 512, SDL_WINDOW_OPENGL);
     SDL_GL_CreateContext(window);
 
     glViewport(0,0,640,480);

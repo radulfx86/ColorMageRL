@@ -6,7 +6,7 @@ void mainloop(void *userData);
 
 void move(const Vec2i &dir);
 
-void initGL();
+void initGL(const char *title = "");
 
 uint64_t getNow();
 
