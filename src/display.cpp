@@ -219,6 +219,9 @@ void initGL(const char *title)
 
     window = SDL_CreateWindow(title, 0, 0, 512, 512, SDL_WINDOW_OPENGL);
     SDL_GL_CreateContext(window);
+#if _WIN32
+    gladLoadGL();
+#endif
 
     glViewport(0,0,640,480);
 }
