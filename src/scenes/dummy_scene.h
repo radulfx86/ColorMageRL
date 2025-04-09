@@ -8,6 +8,8 @@
 #include "shaders.h"
 #include "level.h"
 
+typedef int CameraID;
+
 class Camera : public System
 {
 public:
@@ -35,10 +37,13 @@ public:
     {
         center = false;
     }
+
+    void setCameraID(CameraID cid);
     
 private:
     EntityID target;
     bool center;
+    CameraID cameraId;
 };
 
 
@@ -74,12 +79,8 @@ public:
     }
     virtual void addAction(Action action) override
     {
-        /// key up
-        if ( not action.value_b )
-        {
-            ActionQueue *queue = EntityManager::getInstance().getComponent<ActionQueue*>(target);
-            queue->elements.push(action);
-        }
+        ActionQueue &queue = EntityManager::getInstance().getComponent<ActionQueue>(target);
+        queue.elements.push(action);
     }
 
 private:

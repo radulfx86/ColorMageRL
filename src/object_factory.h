@@ -29,6 +29,10 @@ void createInstanceBackground(InstancedObject2D &obj, GLuint program);
 
 Object2D *createSimpleBgObject(float tileSize, Vec2 spriteSize, Vec2i spritePos);
 
+void addDefaultMotionAnimation(EntityID target);
+
+void initCamera(GLuint program);
+
 } // namespace ObjectFactory
 
 #endif // _OBJECT_FACTORY_H_

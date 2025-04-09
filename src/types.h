@@ -76,9 +76,17 @@ typedef struct Vec2
     {
         return Vec2{a.x + b.x, a.y + b.y};
     }
+    friend Vec2 operator-(const Vec2 &a, const Vec2 &b)
+    {
+        return Vec2{a.x - b.x, a.y - b.y};
+    }
     friend Vec2 operator*(const Vec2 &a, const float &p)
     {
         return Vec2{a.x * p, a.y * p};
+    }
+    friend Vec2 operator*(const Vec2 &a, const Vec2 &b)
+    {
+        return Vec2{a.x * b.x, a.y * b.y};
     }
  } Vec2;
 

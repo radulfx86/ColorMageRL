@@ -1,6 +1,7 @@
 #include "object_factory.h"
 #include "io.h"
 #include "shaders.h"
+#include "animations.h"
 
 //EntityManager &s = EntityManager::getInstance();
 
@@ -33,20 +34,18 @@ void ObjectFactory::createInstancedObject(InstancedObject2D &obj, GLuint program
 
 EntityID ObjectFactory::initBackground()
 {
-    InstancedObject2D *iobj = new InstancedObject2D;
     GLuint instancedProgram = createShader(loadText("shaders/simple.instanced.vs").c_str(), loadText("shaders/simple.instanced.fs").c_str());
     //createInstancedObject(*iobj, instancedProgram);
-    ObjectFactory::createInstanceBackground(*iobj, instancedProgram);
-    iobj->tex = loadTexture("assets/images/tiles.png");
     EntityID background = EntityManager::getInstance().newEntity("background");
-    EntityManager::getInstance().addComponent<Object2D*>(background,iobj);
-    Bounds *bgbounds = new Bounds;
-    bgbounds->pos = Vec2{0,0};
-    EntityManager::getInstance().addComponent<Bounds*>(background, bgbounds);
+    InstancedObject2D &iobj = EntityManager::getInstance().getComponent<InstancedObject2D>(background);
+    ObjectFactory::createInstanceBackground(iobj, instancedProgram);
+    iobj.tex = loadTexture("assets/images/tiles.png");
+    Bounds &bgbounds = EntityManager::getInstance().getComponent<Bounds>(background);
+    bgbounds.pos = Vec2{0,0};
     //MotionParameters_t *bgMotion = new MotionParameters_t;
     //bgMotion->speed = {0,0};
     //EntityManager::getInstance().addComponent<MotionParameters_t*>(background, bgMotion);
-    printf("level tex: %d\n", iobj->tex);
+    printf("level tex: %d\n", iobj.tex);
 
     return background;
 }
@@ -204,6 +203,92 @@ EntityID ObjectFactory::initPlayer(Object2D *obj)
 }
 #endif
 
+void initDefaultMovementAnimation(Animation &anim)
+{
+    anim.currentDelta = 0.0;
+    anim.currentFrame = 0;
+    anim.deltas = {0.2, 0.2, 0.2, 0.2 };
+    float w = 1.0 / 12.0;
+    anim.currentDirection = Direction_t::DOWN;
+    anim.frames[DOWN] = {
+        {{0,0}, {w,1.f}, false,  {0,0}},
+        {{1,0}, {w,1.f}, false,  {0,0}},
+        {{2,0}, {w,1.f}, false,  {0,0}},
+        {{3,0}, {w,1.f}, false,  {0,0}},
+    };
+    anim.frames[UP] = {
+        {{4,0}, {w,1.f}, false,  {0,0}},
+        {{5,0}, {w,1.f}, false,  {0,0}},
+        {{6,0}, {w,1.f}, false,  {0,0}},
+        {{7,0}, {w,1.f}, false,  {0,0}},
+    };
+    anim.frames[LEFT] = {
+        {{8,0}, {w,1.f}, true,  {0,0}},
+        {{9,0}, {w,1.f}, true,  {0,0}},
+        {{10,0}, {w,1.f}, true,  {0,0}},
+        {{11,0}, {w,1.f}, true,  {0,0}},
+    };
+    anim.frames[RIGHT] = {
+        {{8,0}, {w,1.f}, false,  {0,0}},
+        {{9,0}, {w,1.f}, false,  {0,0}},
+        {{10,0}, {w,1.f}, false,  {0,0}},
+        {{11,0}, {w,1.f}, false,  {0,0}},
+    };
+}
+
+void ObjectFactory::initCamera(GLuint program)
+{
+    float idMat[] = {1,0,0,0,
+                    0,1,0,0,
+                    0,0,1,0,
+                    0,0,0,1};
+    float idMat_01[] = {.125f,0,0,0,
+                    0,.125f,0,0,
+                    0,0,.125f,0,
+                    0,0,0,1};
+    glUseProgram(program);
+    glUniform1i(glGetUniformLocation(program, "tex"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, idMat);
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE,idMat_01);
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE,idMat);
+    glUseProgram(0);
+}
+
+void ObjectFactory::addDefaultMotionAnimation(EntityID target)
+{
+    EntityManager::getInstance().addComponent<AnimationUpdater>(target, [](Object2D *t, MotionParameters_t *p, float delta) -> bool
+                                     {
+        (void) delta;
+        Direction_t animDir = DOWN;
+        bool update = false;
+        if ( p->speed.x >= .5 )
+        {
+            animDir = RIGHT;
+            update = true;
+        }
+        else if (p->speed.x <= -.5 )
+        {
+            animDir = LEFT;
+            update = true;
+        }
+        else if ( p->speed.y >= 0.5 )
+        {
+            animDir = UP;
+            update = true;
+        }
+        else if ( p->speed.y <= -0.5 )
+        {
+            animDir = DOWN;
+            update = true;
+        }
+        if ( update )
+        {
+            t->setAnimation(animDir);
+        }
+        return false; });
+}
+
+#if 0
 //void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize = 1.0, Vec2 spriteSize = {1,1}, Vec2i spritePos = {0,0})
 void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize, Vec2 spriteSize, Vec2i spritePos)
 {
@@ -230,6 +315,48 @@ void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize, 
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    printf("created object: ");
+    printObjectInfo(obj);
+
+    obj.texOffset = 0;
+
+    // camera init
+    initCamera(obj.program);
+
+    // animation
+    initDefaultMovementAnimation(obj.animation);
+    CHECK_GL_ERROR();
+}
+#endif
+
+//void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize = 1.0, Vec2 spriteSize = {1,1}, Vec2i spritePos = {0,0})
+void ObjectFactory::createObject(Object2D &obj, GLuint program, float tileSize, Vec2 spriteSize, Vec2i spritePos)
+{
+    obj.pos = Vec2{0,0};
+    obj.program = program;
+    glGenVertexArrays(1, &obj.vao);
+    glBindVertexArray(obj.vao);
+
+    glGenBuffers(1, &obj.vertexBuffer);
+    float vertexData[] = {
+        -tileSize/2.0f, tileSize/2.0f, spriteSize.x * spritePos.x, spriteSize.y * spritePos.y,
+        -tileSize/2.0f, -tileSize/2.0f, spriteSize.x * spritePos.x, spriteSize.y * (1 + spritePos.y),
+        tileSize/2.0f, tileSize/2.0f, spriteSize.x * (1 + spritePos.x), spriteSize.y * spritePos.y,
+        tileSize/2.0f, -tileSize/2.0f, spriteSize.x * (1 + spritePos.x), spriteSize.y * (1 + spritePos.y)
+       };
+    glBindBuffer(GL_ARRAY_BUFFER, obj.vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
+    
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (GLvoid*)(2*sizeof(float)));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
     printf("created object: ");
     printObjectInfo(obj);
 
@@ -313,16 +440,7 @@ Object2D *ObjectFactory::createSimpleBgObject(float tileSize, Vec2 spriteSize, V
 
     obj->texOffset = 0;
 
-    float idMat[] = {1,0,0,0,
-                    0,1,0,0,
-                    0,0,1,0,
-                    0,0,0,1};
-    glUseProgram(obj->program);
-    glUniform1i(glGetUniformLocation(obj->program, "tex"), 0);
-    glUniformMatrix4fv(glGetUniformLocation(obj->program, "model"), 1, GL_FALSE, idMat);
-    glUniformMatrix4fv(glGetUniformLocation(obj->program, "view"), 1,  GL_FALSE,idMat);
-    glUniformMatrix4fv(glGetUniformLocation(obj->program, "projection"), 1,  GL_FALSE,idMat);
-    glUseProgram(0);
+    initCamera(obj->program);
     
     glUseProgram(obj->program);
 
@@ -399,20 +517,20 @@ void ObjectFactory::createInstanceBackground(InstancedObject2D &obj, GLuint prog
     float h = 1.0/12.0;
     for ( int x = -5; x < 5; ++x )
     {
-        for ( int y = -7; y < 7; ++y )
+        for (int y = -7; y < 7; ++y)
         {
-            obj.updateInstance(i++, true, Vec2{(float)x,(float)y}, Vec2{(float)x,(float)y}, Vec2{w, h});
+            obj.updateInstance(i++, true, Vec2{(float)x, (float)y}, Vec2{(float)x, (float)y}, Vec2{w, h});
             Animation anim;
-            //anim.frames.clear();// = {{{0,0}, {w,h}, false, {0,0}}};
+            // anim.frames.clear();// = {{{0,0}, {w,h}, false, {0,0}}};
             anim.currentFrame = 0;
             anim.currentDirection = DOWN;
-            //obj.instancePositions[Vec2i{x,y}] = i;
-            //obj.animations.push_back(anim);
-            if ( i >= 100 )
+            // obj.instancePositions[Vec2i{x,y}] = i;
+            // obj.animations.push_back(anim);
+            if (i >= 100)
                 break;
         }
-            if ( i >= 100 )
-                break;
+        if (i >= 100)
+            break;
     }
     obj.numInstances = i;
     obj.numInstances = 256;

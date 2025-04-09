@@ -19,12 +19,14 @@ public:
         STAIRS_DOWN,
         NUM_LEVEL_TILE_TYPES
     };
+
     struct LevelTile
     {
         LevelTileType type;
         int orientation;
         bool solid;
     };
+
     int getTileIndex(Vec2i pos)
     {
         if ( tileData.find(pos) == tileData.end() )
@@ -35,9 +37,10 @@ public:
     }
 
     LevelData() {}
+
     static LevelData load(std::string path, Vec2i offset);
     
-    static LevelData generate(Vec2i levelSize, int numSubLevels);
+    static LevelData generateRL(Vec2i levelSize, int numSubLevels);
 
     static void updateAutoTilerOrientation(LevelData &level);
 
@@ -48,6 +51,7 @@ public:
                 || (tileData.find(Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}].solid)
                 || (tileData.find(Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}].solid);
     }
+
     std::vector<std::pair<Vec2i, LevelTile>> getTilesInBounds(const Bounds &b)
     {
         std::vector<std::pair<Vec2i, LevelTile>> tiles;
@@ -96,6 +100,7 @@ public:
         printf("number of active tiles: %lu of %lu\n", tiles.size(), tileData.size());
         return tiles;
     }
+
     std::vector<Vec2> getPathTo(Vec2i start, Vec2i end)
     {
         struct WeightedVec2i{
@@ -149,8 +154,6 @@ public:
         }
         return vPath;
     }
-
-
 
     Vec2 getEntryPoint() const
     {

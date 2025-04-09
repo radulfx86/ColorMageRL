@@ -137,7 +137,7 @@ bool buildRoomConnection(int idxRoom, int idxRoomNext, std::vector<Room> rooms, 
     return true;
 }
 
-LevelData LevelData::generate(Vec2i levelSize, int numSubLevels)
+LevelData LevelData::generateRL(Vec2i levelSize, int numSubLevels)
 {
     if ( levelSize.x > 100 || levelSize.y > 100 )
     {
@@ -415,6 +415,8 @@ LevelData LevelData::load(std::string path, Vec2i offset)
                     level.tileData[Vec2i{2 * x + offset.x + 1, 2 * y + offset.y + 1}] = {DOOR, 0, false};
                     level.tileData[Vec2i{2 * x + offset.x, 2 * y + offset.y + 1}] = {DOOR, 0, false};
                     break;
+                case 'X':
+                    level.entryPoint = Vec2i{2*x,2*y};
                 default:
                     break;
                 }

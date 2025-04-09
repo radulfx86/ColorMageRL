@@ -39,15 +39,19 @@ public:
     ComponentList() : nextIdx(0) {}
     ComponentList(T firstEntry) : nextIdx(0)
     {
-        //std::cout << __func__ << "(" << &firstEntry << ")\n";
+        std::cout << __func__ << "(" << &firstEntry << ")\n";
         add(firstEntry);
+    }
+    uint32_t init()
+    {
+        return nextIdx++;
     }
     uint32_t add(T c)
     {
-        //std::cout << __func__ << "(" << &c << ")\n";
-        //std::cout << "add element to ComponentList<" << typeid(c).name() << "> and size " << sizeof(T) << " at index " << nextIdx << "\n";
+        std::cout << __func__ << "(" << &c << ")\n";
+        std::cout << "add element to ComponentList<" << typeid(c).name() << "> and size " << sizeof(T) << " at index " << nextIdx << "\n";
         components[nextIdx] = c;
-        return nextIdx++;
+        return init();
     }
     T &get(uint32_t idx)
     {
@@ -66,9 +70,9 @@ class EntityManager
 {
 private:
     std::map<EntityID, std::string> entityNames;
-    EntityID nextEntityID;
+    EntityID nextEntityID = 1;
     std::map<ComponentType, ComponentID> ComponentIDMap {};
-    ComponentID nextComponentID;
+    ComponentID nextComponentID = 1;
 
     std::map<EntityID, Components> entityComponentMap {};
     std::map<ComponentID, EntityID> componentToEntityMap {};
@@ -78,7 +82,7 @@ private:
     std::map<SystemID, std::string> systemNames;
     std::map<SystemID, Components> systemComponnentMap {};
     std::map<SystemID, std::vector<EntityID>> systemEntities {};
-    SystemID nextSystemID;
+    SystemID nextSystemID = 1;
 public:
     static EntityManager &getInstance()
     {
@@ -97,12 +101,28 @@ public:
     ComponentID registerComponent()
     {
         ComponentType id = ComponentType(typeid(T).name());
-        if ( ComponentIDMap.find(id) == ComponentIDMap.end() )
+        if ( ComponentIDMap.find(id) == ComponentIDMap.end() || 0 == ComponentIDMap[id] )
         {
+            std::cout << __func__ << " new component type " << id << " has ID " << nextComponentID << "\n";
             ComponentIDMap[id] = nextComponentID++;
             entityComponents.insert({ComponentIDMap[id], std::make_shared<ComponentList<T>>()});
         }
-        //std::cout << __func__ << "<" << id << ">" << "() -> " << ComponentIDMap[id] << "\n";
+        else
+        {
+            std::cout << __func__ << "<" << id << "> - type already known?\n";
+        }
+        #if 0
+        if ( ComponentIDMap[id] == 0 )
+        {
+        std::cout << __func__ << "<" << id << "> - reset - "
+            << " ComponentIDMap[" << id << "]: " << ComponentIDMap[id]
+            << " find "
+            << std::boolalpha << (ComponentIDMap.find(id) == ComponentIDMap.end()) << "?\n";
+            ComponentIDMap[id] = nextComponentID++;
+            entityComponents.insert({ComponentIDMap[id], std::make_shared<ComponentList<T>>()});
+        }
+        #endif
+        std::cout << __func__ << "<" << id << ">" << "() -> " << ComponentIDMap[id] << "\n";
         /// is that necessary?
         return ComponentIDMap[id];
     }
@@ -114,23 +134,39 @@ public:
     ComponentID getComponentID()
     {
         ComponentType componentIndex = ComponentType(typeid(T).name());
-        //std::cout << __func__ << "<" << typeid(T).name() << ">() -> ComponentIDMap[" << componentIndex << "]" << ComponentIDMap[componentIndex] << "\n";
+        std::cout << __func__ << "<" << typeid(T).name() << ">() -> ComponentIDMap[" << componentIndex << "]" << ComponentIDMap[componentIndex] << "\n";
         return ComponentIDMap[componentIndex];
     }
 
     template <typename T>
     void addComponent(EntityID id, T c)
     {
-        //std::cout << __func__ << "(" << id << ", " << &c << ")\n";
+        std::cout << __func__ << "<" << typeid(T).name() << ">(" << id << ", " << &c << ")\n";
         ComponentID cId = registerComponent<T>();
-        entityComponentMap[id].set(cId, true);
+        std::cout << "set entity component map for " << typeid(T).name() << " -> " << entityNames[id] << " -> " << cId << std::endl;
         addEntityComponent(id, cId, c);
     }
 
     template <typename T>
     T &getComponent(EntityID id)
     {
-        //std::cout << __func__ << "<" << typeid(id).name() << ">(" << id << ") -> ...\n";
+        std::cout << __func__ << "<" << typeid(T).name() << ">(" << id << ") -> " << std::boolalpha << " available: " << hasComponent<T>(id) << " ...\n";
+        if ( not hasComponent<T>(id) )
+        {
+            // TODO extract the next two lines into its own function !!!
+            ComponentID cId = registerComponent<T>();
+            entityComponentMap[id].set(cId, true);
+            initEntityComponent<T>(id, cId);
+            std::cout << "set entity component map for " << typeid(T).name() << " -> " << entityNames[id] << " -> " << cId << std::endl;
+            bool hasC = hasComponent<T>(id);
+            std::cout << __func__<< "<" << typeid(id).name() << "> -> hasComponent: " << hasC << std::endl;
+        }
+        ComponentID cId = ComponentIDMap[ComponentType(typeid(T).name())];
+        if ( not entityComponentMap[id][cId] )
+        {
+            std::cout << "was NOT set : " << id << " cid: " << cId << "\n";
+            entityComponentMap[id].set(cId, true);
+        }
         return std::static_pointer_cast<ComponentList<T>>(
                 entityComponents[
                     ComponentIDMap[ComponentType(typeid(T).name())]])
@@ -147,14 +183,26 @@ public:
     }
 
     template <typename T>
+    void initEntityComponent(EntityID id, ComponentID cId)
+    {
+        uint32_t idx = std::static_pointer_cast<ComponentList<T>>(entityComponents[cId])->init();
+        std::cout << __func__ << " object idx: " << idx << " for eid: " << id << " cid: " << cId << "\n";
+        entityComponentIndices[id][cId] = idx;
+        entityComponentMap[id].set(cId, true);
+    }
+
+    template <typename T>
     void addEntityComponent(EntityID id, ComponentID cId, T &c)
     {
-        //std::cout << __func__ << "(" << id << ", " << cId << ", "  << &c << ")\n";
+        std::cout << __func__ << "(" << id << ", " << cId << ", "  << &c << ")\n";
         if ( entityComponents.find(cId) == entityComponents.end() )
         {
+            std::cout << __func__ << " -> new entity\n";
             entityComponents.insert({cId, std::make_shared<ComponentList<T>>(c)});
         }
         uint32_t idx = std::static_pointer_cast<ComponentList<T>>(entityComponents[cId])->add(c);
+        std::cout << __func__ << " object idx: " << idx << " for eid: " << id << " cid: " << cId << "\n";
+        std::cout << __func__ << " object at " << std::static_pointer_cast<ComponentList<T>>(entityComponents[cId])->get(idx) << std::endl;
         entityComponentIndices[id][cId] = idx;
     }
     

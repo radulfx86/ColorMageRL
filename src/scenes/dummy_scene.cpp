@@ -12,7 +12,7 @@ EntityManager &em = EntityManager::getInstance();
 Camera::Camera() : System(em.newSystem("camera"))
 {
     Components cameraComponents;
-    cameraComponents.set(em.getComponentID<Object2D*>());
+    cameraComponents.set(em.getComponentID<Object2D>());
     em.updateSystemComponents(id, cameraComponents);
     
     memcpy(this->view, identity, sizeof(Mat4));
@@ -21,6 +21,11 @@ Camera::Camera() : System(em.newSystem("camera"))
     zoom(0.075);
     //zoom(0.250);
     this->proj[0] *= 0.75;
+}
+
+void Camera::setCameraID(CameraID cid)
+{
+    this->cameraId = cid;
 }
 
 void Camera::move(Vec2 pos)
@@ -53,16 +58,20 @@ void Camera::update(float delta)
     (void) delta;
     if ( center )
     {
-        move(EntityManager::getInstance().getComponent<Object2D*>(target)->pos);
+        move(EntityManager::getInstance().getComponent<Object2D>(target).pos);
     }
-    printf("Camera: update\n");
+    printf("Camera: updating %ld entities\n", EntityManager::getInstance().getSystemEntities(id).size());
     for (EntityID eid : EntityManager::getInstance().getSystemEntities(id))
     {
         printf("Camera: update for id %d\n", eid);
-        Object2D *tgt = EntityManager::getInstance().getComponent<Object2D *>(eid);
-        glUseProgram(tgt->program);
-        glUniformMatrix4fv(glGetUniformLocation(tgt->program, "view"), 1, GL_FALSE, view);
-        glUniformMatrix4fv(glGetUniformLocation(tgt->program, "projection"), 1, GL_FALSE, proj);
+        Object2D &tgt = EntityManager::getInstance().getComponent<Object2D>(eid);
+        if ( EntityManager::getInstance().hasComponent<CameraID *>(eid) && cameraId != *EntityManager::getInstance().getComponent<CameraID *>(eid) )
+        {
+            continue;
+        }
+        glUseProgram(tgt.program);
+        glUniformMatrix4fv(glGetUniformLocation(tgt.program, "view"), 1, GL_FALSE, view);
+        glUniformMatrix4fv(glGetUniformLocation(tgt.program, "projection"), 1, GL_FALSE, proj);
         glUseProgram(0);
     }
 }
@@ -82,7 +91,7 @@ DummyLevel::DummyLevel() : deltaSum(0), numTiles(500)
 
     //EntityID levelData = em.newEntity("level_data");
     // data = LevelData::load("level.txt", Vec2i{-5,-5});
-    data = LevelData::generate(Vec2i{50,30}, 0);
+    data = LevelData::generateRL(Vec2i{50,30}, 0);
     //LevelData currentLevelData = LevelData::generate(seek = 0);
     /*
     currentLevelData->width = 100;
@@ -130,6 +139,11 @@ DummyLevel::DummyLevel() : deltaSum(0), numTiles(500)
 
 void DummyLevel::handleAction(EntityID eid, Action action)
 {
+    // for turn-based game only check for key-up
+    if ( action.value_b )
+    {
+        return;
+    }
     switch (action.type)
     {
     case Action::MOTION:
@@ -185,7 +199,7 @@ bool DummyLevel::update(float delta)
         {
             handleAction(player, playerActions->elements.front());
         }
-        printf("elements left: %lu\n", playerActions->elements.size());
+        //printf("elements left: %lu\n", playerActions->elements.size());
         for (auto entity : em.getSystemEntities(actionsSystem))
         {
             ActionQueue *actions = em.getComponent<ActionQueue*>(entity);

@@ -74,6 +74,11 @@ void EntityManager::updateSystem(SystemID system)
 
 void EntityManager::showAll()
 {
+    std::cout << "Entities: names: "<< entityNames.size() << " componentMaps: " << entityComponentMap.size() << std::endl;
+    for ( auto entityName : entityNames )
+    {
+        std::cout << "\t" << entityName.first << " : " << entityName.second << std::endl;
+    }
     std::cout << "Entities:\n";
     for ( auto entity : entityComponentMap )
     {
