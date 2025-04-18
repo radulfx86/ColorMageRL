@@ -5,6 +5,7 @@
 #include <memory>
 #include <array>
 #include <map>
+#include <unordered_set>
 #include <vector>
 #include <iostream>
 
@@ -81,6 +82,8 @@ private:
     
     std::map<SystemID, std::string> systemNames;
     std::map<SystemID, Components> systemComponnentMap {};
+    // systems that check for entities that have any component instead of all components
+    std::unordered_set<SystemID> systemsOred {};
     std::map<SystemID, std::vector<EntityID>> systemEntities {};
     SystemID nextSystemID = 1;
 public:
@@ -162,7 +165,7 @@ public:
             std::cout << __func__<< "<" << typeid(id).name() << "> -> hasComponent: " << hasC << std::endl;
         }
         ComponentID cId = ComponentIDMap[ComponentType(typeid(T).name())];
-        if ( not entityComponentMap[id][cId] )
+        if ( not entityComponentMap[id].test(cId) )
         {
             std::cout << "was NOT set : " << id << " cid: " << cId << "\n";
             entityComponentMap[id].set(cId, true);
@@ -176,10 +179,17 @@ public:
     template <typename T>
     bool hasComponent(EntityID id)
     {
-        printf("hasComponent(%d) for component %s componentID %d - result: %d\n",
-        id, ComponentType(typeid(T).name()), ComponentIDMap[ComponentType(typeid(T).name())], entityComponentIndices[id][ComponentIDMap[ComponentType(typeid(T).name())]]
+        ComponentID cId = ComponentIDMap[ComponentType(typeid(T).name())];
+        int bitsetData = (int)(entityComponentMap[id].to_ulong());
+        printf("hasComponent(%d) for component %s componentID %d - result: entityComponentMap[%d]test(%d) = %d = %d\n",
+        id,
+        ComponentType(typeid(T).name()),
+        ComponentIDMap[ComponentType(typeid(T).name())],
+         id, cId,
+         bitsetData,
+         entityComponentMap[id].test(cId)
         );
-        return ComponentIDMap[ComponentType(typeid(T).name())] != 0;
+        return entityComponentMap[id].test(cId);
     }
 
     template <typename T>
@@ -203,13 +213,15 @@ public:
         uint32_t idx = std::static_pointer_cast<ComponentList<T>>(entityComponents[cId])->add(c);
         std::cout << __func__ << " object idx: " << idx << " for eid: " << id << " cid: " << cId << "\n";
         std::cout << __func__ << " object at " << std::static_pointer_cast<ComponentList<T>>(entityComponents[cId])->get(idx) << std::endl;
+        std::cout << __func__ << " entityComponentMap[" << id << "].test(" << cId << "): " << entityComponentMap[id].test(cId) << std::endl;
+        entityComponentMap[id].set(cId, true);
+        std::cout << __func__ << " entityComponentMap[" << id << "].test(" << cId << "): " << entityComponentMap[id].test(cId) << std::endl;
         entityComponentIndices[id][cId] = idx;
     }
     
     SystemID newSystem(std::string name);
     
-
-    SystemID addSystem(Components components, std::string name);
+    SystemID addSystem(Components components, std::string name, bool ored = false);
     
 
     bool updateSystemComponents(SystemID system, Components components);
@@ -222,6 +234,7 @@ public:
 
     void updateSystem(SystemID system);
     
+    void setSystemOred(SystemID system, bool ored = false);
 
     void showAll();
     

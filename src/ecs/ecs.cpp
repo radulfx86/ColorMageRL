@@ -31,7 +31,7 @@ SystemID EntityManager::newSystem(std::string name)
     return newID;
 }
 
-SystemID EntityManager::addSystem(Components components, std::string name)
+SystemID EntityManager::addSystem(Components components, std::string name, bool ored)
 {
     SystemID system = nextSystemID++;
     //std::cerr << "add new ("<< name <<") system with id " << system << "\n";
@@ -45,13 +45,22 @@ SystemID EntityManager::addSystem(Components components, std::string name)
     {
         systemComponnentMap[system] = components;
     }
+    setSystemOred(system, ored);
     updateSystem(system);
     return system;
 }
 
+void EntityManager::setSystemOred(SystemID system, bool ored)
+{
+    if ( ored )
+    {
+        systemsOred.insert(system);
+    }
+}
+
 bool EntityManager::updateSystemComponents(SystemID system, Components components)
 {
-    //std::cerr << "update components of system " << system << "\n";
+    std::cerr << "update components of system " << system << "\n";
     systemComponnentMap[system] = components;
     updateSystem(system);
     return true;
@@ -61,15 +70,24 @@ void EntityManager::updateSystem(SystemID system)
 {
     Components systemComponents = systemComponnentMap[system];
     systemEntities[system].clear();
+    bool ored = systemsOred.find(system) != systemsOred.end();
+    if ( ored )
+    {
+        printf("system %d %s is ORED!\n", system, systemNames[system].c_str());
+    }
     for ( auto components : entityComponentMap )
     {
         Components entityComponents = components.second;
-        if ( (entityComponents & systemComponents) == systemComponents )
+        if ( ored && ((entityComponents & systemComponents) != 0) )
+        {
+            systemEntities[system].push_back(components.first);
+        }
+        else if ( (entityComponents & systemComponents) == systemComponents )
         {
             systemEntities[system].push_back(components.first);
         }
     }
-    //std::cerr << "system " << system << " has " << systemEntities[system].size() << " target entities\n";
+    std::cerr << "system " << system << " has " << systemEntities[system].size() << " target entities\n";
 }
 
 void EntityManager::showAll()

@@ -13,6 +13,9 @@ Camera::Camera() : System(em.newSystem("camera"))
 {
     Components cameraComponents;
     cameraComponents.set(em.getComponentID<Object2D>());
+    cameraComponents.set(em.getComponentID<InstancedObject2D>());
+    cameraComponents.set(em.getComponentID<MultiObject2D>());
+    em.setSystemOred(id, true);
     em.updateSystemComponents(id, cameraComponents);
     
     memcpy(this->view, identity, sizeof(Mat4));
@@ -54,9 +57,13 @@ Bounds Camera::getViewCone()
 
 void Camera::update(float delta)
 {
+    (void)delta;
+    // move(EntityManager::getInstance().getComponent<Object2D>(target).pos);
+    // return;
+    //  TODO: view/projection is NOT applied to InstancedArray somehow ...
     EntityManager::getInstance().updateSystem(id);
-    (void) delta;
-    if ( center )
+    (void)delta;
+    if (center)
     {
         move(EntityManager::getInstance().getComponent<Object2D>(target).pos);
     }
@@ -64,15 +71,30 @@ void Camera::update(float delta)
     for (EntityID eid : EntityManager::getInstance().getSystemEntities(id))
     {
         printf("Camera: update for id %d\n", eid);
-        Object2D &tgt = EntityManager::getInstance().getComponent<Object2D>(eid);
-        if ( EntityManager::getInstance().hasComponent<CameraID *>(eid) && cameraId != *EntityManager::getInstance().getComponent<CameraID *>(eid) )
+        GLuint program = 0;
+        if (EntityManager::getInstance().hasComponent<Object2D>(eid))
         {
-            continue;
+            Object2D &tgt = EntityManager::getInstance().getComponent<Object2D>(eid);
+            program = tgt.program;
+            printf("using normal object for id %d - program: %u\n", id, program);
         }
-        glUseProgram(tgt.program);
-        glUniformMatrix4fv(glGetUniformLocation(tgt.program, "view"), 1, GL_FALSE, view);
-        glUniformMatrix4fv(glGetUniformLocation(tgt.program, "projection"), 1, GL_FALSE, proj);
-        glUseProgram(0);
+        else if (EntityManager::getInstance().hasComponent<InstancedObject2D>(eid))
+        {
+            InstancedObject2D &tgt = EntityManager::getInstance().getComponent<InstancedObject2D>(eid);
+            program = tgt.program;
+            printf("using instanced object for id %d - program: %u\n", id, program);
+        }
+        else
+        {
+            // nothing to do
+        }
+        if (program)
+        {
+            glUseProgram(program);
+            glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, view);
+            glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, proj);
+            glUseProgram(0);
+        }
     }
 }
 
