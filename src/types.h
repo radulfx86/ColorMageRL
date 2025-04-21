@@ -115,6 +115,7 @@ typedef struct ActionQueue
 
 typedef struct Bounds
 {
+    Vec2 offset;
     Vec2 pos;
     Vec2 size;
 } Bounds;

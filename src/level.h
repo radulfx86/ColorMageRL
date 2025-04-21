@@ -46,10 +46,10 @@ public:
 
     bool intersects(const Bounds &b)
     {
-        return (tileData.find(Vec2i{(int)b.pos.x, (int)b.pos.y}) != tileData.end() && tileData[Vec2i{(int)b.pos.x, (int)b.pos.y}].solid)
-                || (tileData.find(Vec2i{(int)(b.pos.x + b.size.x), (int)b.pos.y}) != tileData.end() && tileData[Vec2i{(int)(b.pos.x + b.size.x), (int)b.pos.y}].solid)
-                || (tileData.find(Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)(b.pos.x + b.size.x), (int)(b.pos.y + b.size.y)}].solid)
-                || (tileData.find(Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)b.pos.x, (int)(b.pos.y + b.size.y)}].solid);
+        return (tileData.find(Vec2i{(int)(b.offset.x + b.pos.x), (int)(b.offset.y + b.pos.y)}) != tileData.end() && tileData[Vec2i{(int)(b.offset.x + b.pos.x), (int)(b.offset.y + b.pos.y)}].solid)
+                || (tileData.find(Vec2i{(int)((b.offset.x + b.pos.x) + b.size.x), (int)(b.offset.y + b.pos.y)}) != tileData.end() && tileData[Vec2i{(int)((b.offset.x + b.pos.x) + b.size.x), (int)(b.offset.y + b.pos.y)}].solid)
+                || (tileData.find(Vec2i{(int)((b.offset.x + b.pos.x) + b.size.x), (int)((b.offset.y + b.pos.y) + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)((b.offset.x + b.pos.x) + b.size.x), (int)((b.offset.y + b.pos.y) + b.size.y)}].solid)
+                || (tileData.find(Vec2i{(int)(b.offset.x + b.pos.x), (int)((b.offset.y + b.pos.y) + b.size.y)}) != tileData.end() && tileData[Vec2i{(int)(b.offset.x + b.pos.x), (int)((b.offset.y + b.pos.y) + b.size.y)}].solid);
     }
 
     std::vector<std::pair<Vec2i, LevelTile>> getTilesInBounds(const Bounds &b)
